@@ -1,0 +1,9 @@
+.env.local
+.dev.vars
+
+node_modules/
+dist/
+.wrangler/
+.DS_Store
+vite.config.js.timestamp-*.mjs
+*.log

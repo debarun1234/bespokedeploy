@@ -1,0 +1,414 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+/* ── Theme tokens ─────────────────────────────────────────── */
+:root {
+  --c-bg:           #07070F;
+  --c-surface:      #0D0D1A;
+  --c-surface2:     #13132A;
+  --c-border:       #1E1E40;
+  --c-border-faint: rgba(30, 30, 64, 0.45);
+  --c-text:         #F1F0FF;
+  --c-muted:        #6B7280;
+  --c-dim:          #9CA3AF;
+}
+:root[data-theme="light"] {
+  --c-bg:           #F0F4FA;
+  --c-surface:      #FFFFFF;
+  --c-surface2:     #E8EDF5;
+  --c-border:       #CBD5E1;
+  --c-border-faint: rgba(180, 194, 214, 0.5);
+  --c-text:         #0F172A;
+  --c-muted:        #64748B;
+  --c-dim:          #475569;
+}
+
+body {
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+input, select, textarea, button { font-family: inherit; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--c-surface); }
+::-webkit-scrollbar-thumb { background: #1E3A5F; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #0EA5E9; }
+
+/* ── Animations ───────────────────────────────────────────── */
+@keyframes floatA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(40px, -30px) scale(1.04); }
+  66%       { transform: translate(-25px, 20px) scale(0.97); }
+}
+@keyframes floatB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(-30px, 25px) scale(0.96); }
+  66%       { transform: translate(20px, -15px) scale(1.03); }
+}
+@keyframes pulse-ring {
+  0%   { transform: scale(0.95); opacity: 0.6; }
+  70%  { transform: scale(1.05); opacity: 0; }
+  100% { transform: scale(1.05); opacity: 0; }
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes confetti-fall {
+  0%   { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+@keyframes bounce-in {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.15); }
+  80%  { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes draw-check {
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes wave-hand {
+  0%, 55%, 100% { transform: rotate(0deg); }
+  10%            { transform: rotate(-22deg); }
+  20%            { transform: rotate(18deg); }
+  30%            { transform: rotate(-18deg); }
+  40%            { transform: rotate(12deg); }
+  50%            { transform: rotate(-6deg); }
+}
+@keyframes coin-shine {
+  0%   { opacity: 0; left: -60%; }
+  40%  { opacity: 0.6; }
+  100% { opacity: 0; left: 140%; }
+}
+
+/* ── Responsive layout helpers ────────────────────────────── */
+
+/* Nav */
+.nav-root {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 0 40px;
+  height: 72px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 10;
+  overflow: visible;
+}
+.nav-logo {
+  height: 110px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.nav-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+.nav-pills {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.nav-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+/* Dark mode prompt */
+.dark-prompt {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  white-space: nowrap;
+  z-index: 100;
+}
+
+/* Hero */
+.hero-root {
+  position: relative;
+  min-height: 100vh;    /* fallback for older browsers */
+  min-height: 100svh;   /* svh = stable viewport height — ignores mobile address bar */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 24px;
+  /* Clip overflow from decorative rings/bubbles.
+     'clip' doesn't create a scroll container (unlike 'hidden'), so page scroll works. */
+  overflow: hidden;     /* fallback */
+  overflow: clip;
+}
+.hero-inner {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  position: relative;
+  z-index: 5;
+  max-width: 1100px;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.hero-text {
+  flex: 1 1 400px;
+  text-align: left;
+  min-width: 0;
+}
+.hero-title {
+  font-size: clamp(36px, 6vw, 68px);
+  font-weight: 900;
+  line-height: 1.06;
+  letter-spacing: -0.03em;
+  margin-bottom: 22px;
+}
+.hero-subtitle {
+  font-size: clamp(15px, 2.2vw, 17.5px);
+  line-height: 1.65;
+  margin-bottom: 36px;
+  font-weight: 400;
+}
+.hero-cta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+/* Coin section — wraps coin + mobile bubbles row as one flex unit */
+.hero-coin-section {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.hero-coin-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 340px;
+  height: 340px;
+}
+
+/* Desktop absolute bubbles — base display so CSS media queries can override it.
+   IMPORTANT: must appear BEFORE media query breakpoints in this file. */
+.hero-bubble {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-name-badge { display: block; }
+
+/* Compact pill links — shown only on mobile in place of absolute bubbles */
+.hero-bubbles-row { display: none; }
+
+.hero-bubble-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 13px 6px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  text-decoration: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: var(--c-surface);
+  white-space: nowrap;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.hero-bubble-pill:hover { transform: scale(1.05); }
+
+/* Plans grid */
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+/* USPs */
+.usps-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* How it works */
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+/* Addon step */
+.addon-layout {
+  display: flex;
+  gap: 28px;
+}
+.summary-sidebar {
+  position: sticky;
+  top: 24px;
+  width: 320px;
+  flex-shrink: 0;
+}
+
+/* Form */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Section */
+.section-root {
+  padding: 64px 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ── Breakpoints ──────────────────────────────────────────── */
+
+/* Large tablet / small laptop */
+@media (max-width: 1024px) {
+  .plans-grid     { grid-template-columns: repeat(2, 1fr); }
+  .usps-grid      { grid-template-columns: repeat(2, 1fr); }
+  .how-grid       { grid-template-columns: repeat(2, 1fr); }
+  .hero-coin-wrap { width: 300px; height: 300px; }
+  .nav-root       { padding: 0 24px; }
+}
+
+/* Tablet portrait */
+@media (max-width: 768px) {
+  .plans-grid     { grid-template-columns: 1fr; max-width: 480px; margin: 0 auto; }
+  .usps-grid      { grid-template-columns: repeat(2, 1fr); }
+  .how-grid       { grid-template-columns: repeat(2, 1fr); }
+  .addon-layout   { flex-direction: column; }
+  .summary-sidebar { position: static; width: 100%; }
+  .hero-coin-wrap { width: 260px; height: 260px; }
+  .hero-inner     { gap: 32px; }
+  .hero-root      { padding-top: 80px; }
+  .section-root   { padding: 48px 20px; }
+  .nav-root       { padding: 0 20px; }
+  .nav-logo       { height: 90px; }
+}
+
+/* ── Phone portrait ≤640px ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .nav-pills        { display: none; }
+  .nav-logo         { height: 72px; }
+  .nav-root         { padding: 0 16px; height: 64px; }
+  /* Coin section goes above the text column */
+  .hero-coin-section { order: -1; }
+  .hero-coin-wrap   { width: 200px; height: 200px; }
+  .hero-text        { text-align: center; flex: 1 1 100%; }
+  .hero-cta-row     { justify-content: center; }
+  .hero-title       { font-size: clamp(32px, 9vw, 44px); }
+  .hero-subtitle    { font-size: 15px; }
+  .hero-root        { min-height: 100vh; min-height: 100svh; padding: 80px 16px 40px; }
+  .hero-inner       { flex-direction: column; gap: 16px; }
+  .section-root     { padding: 40px 16px; }
+  .usps-grid        { grid-template-columns: 1fr; }
+  .how-grid         { grid-template-columns: 1fr 1fr; }
+  .form-row         { grid-template-columns: 1fr; }
+  /* Hide absolute desktop bubbles; show compact pill row instead */
+  .hero-bubble      { display: none; }
+  .hero-name-badge  { display: none; }
+  .hero-bubbles-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* ── Small phones ≤390px ──────────────────────────────────── */
+@media (max-width: 390px) {
+  .hero-title     { font-size: clamp(28px, 8.5vw, 36px); }
+  .how-grid       { grid-template-columns: 1fr; }
+  .hero-coin-wrap { width: 160px; height: 160px; }
+  .nav-logo       { height: 58px; }
+  .section-root   { padding: 32px 14px; }
+  .hero-bubble-pill { font-size: 10.5px; padding: 5px 10px 5px 8px; }
+}
+
+/* ── Landscape phones (short viewport ≤600px) ─────────────── */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* Hero: auto-height so it doesn't trap content, normal page scroll */
+  .hero-root        { min-height: auto; padding: 72px 24px 48px; }
+  /* Side-by-side: text left, coin section right */
+  .hero-inner       { flex-direction: row; gap: 24px; align-items: center; }
+  .hero-text        { text-align: left; flex: 1 1 260px; }
+  .hero-cta-row     { justify-content: flex-start; }
+  /* Coin section on the right, coin small */
+  .hero-coin-section { order: 0; gap: 12px; }
+  .hero-coin-wrap   { width: 150px; height: 150px; }
+  /* Show compact pills stacked below coin in landscape */
+  .hero-bubble      { display: none; }
+  .hero-name-badge  { display: none; }
+  .hero-bubbles-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: stretch;
+  }
+  .hero-bubble-pill { font-size: 10.5px; padding: 5px 10px 5px 8px; justify-content: flex-start; }
+  /* Tighter type */
+  .hero-title       { font-size: clamp(20px, 4vw, 32px); margin-bottom: 8px; }
+  .hero-subtitle    { font-size: 12.5px; margin-bottom: 14px; line-height: 1.5; }
+  /* Compact nav */
+  .nav-root         { height: 54px; padding: 0 20px; }
+  .nav-logo         { height: 54px; }
+  .nav-pills        { display: none; }
+  /* Compact lower sections */
+  .section-root     { padding: 36px 20px; }
+  .plans-grid       { grid-template-columns: repeat(2, 1fr); }
+  .usps-grid        { grid-template-columns: repeat(2, 1fr); }
+  .how-grid         { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* Coin flip inner (fills its container) */
+.coin-flip-inner {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  user-select: none;
+  perspective: 900px;
+}
+
+/* Dark mode prompt bubble — responsive */
+.dark-prompt-bubble {
+  position: absolute;
+  top: 46px;
+  right: 0;
+  background: #1a1a3a;
+  border: 1px solid rgba(14,165,233,0.4);
+  border-radius: 12px;
+  padding: 10px 14px;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 8px 24px rgba(14,165,233,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .dark-prompt-bubble {
+    right: -8px;
+    white-space: normal;
+    min-width: 190px;
+  }
+}
