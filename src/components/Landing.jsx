@@ -1848,6 +1848,39 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
               <div style={{ position: 'absolute', bottom: -7, left: 14, width: 12, height: 12, background: isDark ? '#1a1a3a' : '#ffffff', border: '1px solid rgba(14,165,233,0.5)', borderTop: 'none', borderRight: 'none', transform: 'rotate(-45deg)', borderRadius: '0 0 0 3px' }} />
             </motion.a>
 
+            {/* Bubble: Wound Care by Axcess — top-center */}
+            <motion.a
+              href="https://woundcarebyaxcess.com/"
+              target="_blank" rel="noopener noreferrer"
+              initial={{ opacity: 0, scale: 0, y: -10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: 1.4, type: 'spring', stiffness: 260, damping: 18 }}
+              whileHover={{ scale: 1.08, y: -3 }}
+              className="hero-bubble"
+              style={{
+                position: 'absolute', top: -55, left: '50%', transform: 'translateX(-50%)',
+                background: isDark ? 'linear-gradient(135deg, #1a1a3a, #12122a)' : '#ffffff',
+                border: '1px solid rgba(239,68,68,0.5)',
+                borderRadius: '18px 18px 18px 18px',
+                padding: '10px 14px',
+                textDecoration: 'none', zIndex: 10,
+                boxShadow: isDark ? '0 8px 24px rgba(239,68,68,0.2)' : '0 8px 24px rgba(239,68,68,0.12)',
+                cursor: 'pointer', whiteSpace: 'nowrap',
+              }}
+            >
+              {/* Wound care icon — medical cross */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <rect width="24" height="24" rx="5" fill="rgba(239,68,68,0.15)"/>
+                <path d="M11 6h2v5h5v2h-5v5h-2v-5H6v-2h5V6z" fill="#EF4444"/>
+              </svg>
+              <div>
+                <div style={{ fontSize: 10, color: 'rgba(239,68,68,0.9)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1 }}>Recent Client</div>
+                <div style={{ fontSize: 11.5, color: C.text, fontWeight: 600, marginTop: 2 }}>Wound Care by Axcess →</div>
+              </div>
+              {/* Bubble tail */}
+              <div style={{ position: 'absolute', bottom: -7, left: '50%', transform: 'translateX(-50%) rotate(45deg)', width: 12, height: 12, background: isDark ? '#1a1a3a' : '#ffffff', border: '1px solid rgba(239,68,68,0.5)', borderTop: 'none', borderLeft: 'none', borderRadius: '0 0 3px 0' }} />
+            </motion.a>
+
             {/* Bubble: Customer — top-right */}
             <motion.a
               href="https://sheetalchandel.com/"
@@ -1996,6 +2029,17 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
                 <line x1="12" y1="21" x2="12" y2="11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
               </svg>
               Sheetal Chandel
+            </a>
+            <a
+              href="https://woundcarebyaxcess.com/"
+              target="_blank" rel="noopener noreferrer"
+              className="hero-bubble-pill"
+              style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#EF4444' }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
+                <path d="M11 6h2v5h5v2h-5v5h-2v-5H6v-2h5V6z" fill="currentColor"/>
+              </svg>
+              Wound Care by Axcess
             </a>
             <a
               href="https://www.linkedin.com/in/debarunghosh2024/"

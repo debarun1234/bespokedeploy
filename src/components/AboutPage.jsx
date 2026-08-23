@@ -52,9 +52,10 @@ const WHY = [
 ];
 
 const WORK = [
-  { name: 'Sheetal Chandel', desc: 'Dietician & nutrition counseling site',   url: 'https://sheetalchandel.com/' },
-  { name: 'insight-ai.dev',  desc: 'AI product landing page',                 url: 'https://insight-ai.dev/' },
-  { name: 'My Portfolio',    desc: 'Personal work & case studies',            url: 'https://debarunghosh.netlify.app/' },
+  { name: 'Sheetal Chandel',       desc: 'Dietician & nutrition counseling site', url: 'https://sheetalchandel.com/' },
+  { name: 'Wound Care by Axcess',  desc: 'Wound care service website',            url: 'https://woundcarebyaxcess.com/' },
+  { name: 'insight-ai.dev',        desc: 'AI product landing page',               url: 'https://insight-ai.dev/' },
+  { name: 'My Portfolio',          desc: 'Personal work & case studies',          url: 'https://debarunghosh.netlify.app/' },
 ];
 
 export default function AboutPage() {
