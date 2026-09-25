@@ -3,6 +3,8 @@ import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { PLANS } from '../data/plans';
 import { PLAN_ICONS, PAUSE_ICON } from '../data/planIcons';
 import { C, fadeUp, stagger, fmt } from '../theme';
+import HeroLightFX from './HeroLightFX';
+import MsmeBadge, { MsmeSeal } from './MsmeBadge';
 
 // ─── Promo Banner ───────────────────────────────────────────
 // Fetches from GET /api/promos — a public, read-only endpoint that only ever
@@ -11,7 +13,7 @@ import { C, fadeUp, stagger, fmt } from '../theme';
 // the browser: creating/editing/toggling a promo requires the admin's bearer
 // token, checked server-side on every write (functions/api/admin/promos/).
 const PROMO_THEME_COLORS = {
-  accent: { c1: '#0EA5E9', c2: '#38BDF8' },
+  accent: { c1: '#E8542C', c2: '#F0714A' },
   gold:   { c1: '#F59E0B', c2: '#FBBF24' },
   green:  { c1: '#10B981', c2: '#34D399' },
   purple: { c1: '#8B5CF6', c2: '#A78BFA' },
@@ -162,13 +164,13 @@ const USP_ICONS = {
   transparency: (
     <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
       <path d="M5 22c0 0 7-11 17-11s17 11 17 11-7 11-17 11S5 22 5 22z"
-        stroke="#0EA5E9" strokeWidth="2" strokeLinejoin="round" fill="rgba(14,165,233,0.08)"/>
-      <circle cx="22" cy="22" r="5" stroke="#0EA5E9" strokeWidth="2" fill="rgba(14,165,233,0.18)"/>
-      <circle cx="22" cy="22" r="2" fill="#0EA5E9"/>
+        stroke="#E8542C" strokeWidth="2" strokeLinejoin="round" fill="rgba(232,84,44,0.08)"/>
+      <circle cx="22" cy="22" r="5" stroke="#E8542C" strokeWidth="2" fill="rgba(232,84,44,0.18)"/>
+      <circle cx="22" cy="22" r="2" fill="#E8542C"/>
       {/* Lashes / rays */}
-      <line x1="22" y1="8" x2="22" y2="11" stroke="#0EA5E9" strokeWidth="1.8" strokeLinecap="round"/>
-      <line x1="10" y1="13" x2="12.5" y2="15.5" stroke="#0EA5E9" strokeWidth="1.8" strokeLinecap="round" opacity="0.5"/>
-      <line x1="34" y1="13" x2="31.5" y2="15.5" stroke="#0EA5E9" strokeWidth="1.8" strokeLinecap="round" opacity="0.5"/>
+      <line x1="22" y1="8" x2="22" y2="11" stroke="#E8542C" strokeWidth="1.8" strokeLinecap="round"/>
+      <line x1="10" y1="13" x2="12.5" y2="15.5" stroke="#E8542C" strokeWidth="1.8" strokeLinecap="round" opacity="0.5"/>
+      <line x1="34" y1="13" x2="31.5" y2="15.5" stroke="#E8542C" strokeWidth="1.8" strokeLinecap="round" opacity="0.5"/>
     </svg>
   ),
 
@@ -214,20 +216,72 @@ const COMPARE_ROWS = [
 ];
 
 // ─── Compare Section ──────────────────────────────────────
+// ─── Testimonials ───────────────────────────────────────────
+// Pulls from GET /api/feedback — public, read-only, and only ever returns
+// rows an admin has already approved (see functions/api/feedback.js). If
+// there's nothing approved yet, this section renders nothing at all rather
+// than showing an empty block.
+function TestimonialStars({ n }) {
+  return (
+    <span style={{ color: '#F59E0B', fontSize: 14, letterSpacing: 1 }}>
+      {'★'.repeat(n)}<span style={{ color: C.border }}>{'★'.repeat(5 - n)}</span>
+    </span>
+  );
+}
+
+function TestimonialsSection() {
+  const [items, setItems] = useState(null); // null = loading, [] = none yet
+
+  useEffect(() => {
+    fetch('/api/feedback?limit=12')
+      .then((r) => r.json())
+      .then((d) => setItems(Array.isArray(d) ? d : []))
+      .catch(() => setItems([]));
+  }, []);
+
+  if (!items || items.length === 0) return null;
+
+  return (
+    <div style={{ background: C.surface, borderTop: `1px solid ${C.borderFaint}`, borderBottom: `1px solid ${C.borderFaint}` }}>
+      <Section id="testimonials">
+        <motion.div variants={fadeUp} style={{ marginBottom: 44 }}>
+          <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>What clients say</div>
+          <h2 style={{ fontFamily: C.fontDisplay, fontSize: 'clamp(26px, 3.4vw, 40px)', fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Real feedback, from real projects</h2>
+        </motion.div>
+        <motion.div
+          variants={fadeUp}
+          style={{
+            display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            background: C.border, border: `1px solid ${C.border}`, gap: 1,
+          }}
+        >
+          {items.map((t) => (
+            <div key={t.id} style={{ background: C.bg, padding: '26px 24px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <TestimonialStars n={t.rating} />
+              <p style={{ fontSize: 14.5, color: C.dim, lineHeight: 1.65, flex: 1, margin: 0 }}>&ldquo;{t.message}&rdquo;</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                <div style={{ fontFamily: C.fontDisplay, fontSize: 14, fontWeight: 700, color: C.text }}>{t.customer_name}</div>
+                {!!t.plan_name && (
+                  <span style={{ fontSize: 11, color: C.accent, fontWeight: 700, border: `1px solid ${C.accent}`, padding: '2px 9px' }}>{t.plan_name}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </motion.div>
+      </Section>
+    </div>
+  );
+}
+
 function CompareSection() {
   const ref    = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-80px' });
 
-  const COL = {
-    ai:  { label: 'AI Builders',       sub: 'Durable · Framer · 10Web',    color: '#6B7280', bg: `${C.surface2}` },
-    diy: { label: 'Wix / Squarespace', sub: 'Popular DIY platforms',        color: '#9CA3AF', bg: `${C.surface2}` },
-    me:  { label: 'BespokeDeploy.in',      sub: 'Custom · Human · One-time',    color: '#0EA5E9', bg: 'rgba(14,165,233,0.07)' },
-  };
-
-  const tick  = (v, isMe) => {
-    if (isMe) return <span style={{ color: '#10B981', fontWeight: 700 }}>{v}</span>;
-    return <span style={{ color: C.muted }}>{v}</span>;
-  };
+  const COLS = [
+    { key: 'ai',  label: 'AI Builders' },
+    { key: 'diy', label: 'Wix / Squarespace' },
+    { key: 'me',  label: 'BespokeDeploy', me: true },
+  ];
 
   return (
     <motion.section
@@ -236,146 +290,49 @@ function CompareSection() {
       initial="hidden"
       animate={inView ? 'show' : 'hidden'}
       id="compare"
-      style={{ padding: '64px 24px', maxWidth: 1100, margin: '0 auto' }}
+      style={{ padding: '20px 24px 120px', maxWidth: 1100, margin: '0 auto' }}
     >
-      <motion.div variants={fadeUp} style={{ textAlign: 'center', marginBottom: 60 }}>
-        <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>
+      <motion.div variants={fadeUp} style={{ marginBottom: 44 }}>
+        <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>
           See the difference
         </div>
-        <h2 style={{ fontSize: 40, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 14 }}>
+        <h2 style={{ fontFamily: C.fontDisplay, fontSize: 'clamp(28px, 3.6vw, 44px)', fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 14, maxWidth: 620, lineHeight: 1.05 }}>
           Why not just use an AI builder or Wix?
         </h2>
-        <p style={{ fontSize: 16, color: C.muted, maxWidth: 580, margin: '0 auto', lineHeight: 1.65 }}>
-          They look cheap monthly — but over time they cost more, look generic, and leave you alone.
-          Here's the honest comparison.
+        <p style={{ fontSize: 15.5, color: C.muted, maxWidth: 560, lineHeight: 1.65 }}>
+          They look cheap monthly — but over time they cost more, look generic, and leave you alone. Here's the honest comparison.
         </p>
       </motion.div>
 
-      {/* Table */}
+      {/* Flat hairline table */}
       <motion.div variants={fadeUp} style={{ overflowX: 'auto' }}>
-        <div style={{ minWidth: 640 }}>
-
-          {/* Column headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr', gap: 8, marginBottom: 8 }}>
-            <div /> {/* empty label cell */}
-            {Object.entries(COL).map(([key, col]) => (
+        <div style={{ minWidth: 640, border: `2px solid ${C.text}` }}>
+          {/* Header row */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr' }}>
+            <div style={{ background: C.text, color: C.bg, fontFamily: C.fontDisplay, fontWeight: 700, fontSize: 13.5, padding: '15px 18px' }}>Pricing model</div>
+            {COLS.map((c) => (
               <div
-                key={key}
+                key={c.key}
                 style={{
-                  background: key === 'me' ? 'rgba(14,165,233,0.12)' : C.surface,
-                  border: key === 'me' ? '1.5px solid rgba(14,165,233,0.45)' : `1px solid ${C.border}`,
-                  borderRadius: '14px 14px 0 0',
-                  padding: '16px 14px',
-                  textAlign: 'center',
-                  boxShadow: key === 'me' ? '0 0 40px rgba(14,165,233,0.12)' : 'none',
+                  background: c.me ? C.accent : C.text,
+                  color: '#fff',
+                  fontFamily: C.fontDisplay, fontWeight: 700, fontSize: 13.5,
+                  padding: '15px 14px', textAlign: 'center',
                 }}
               >
-                <div style={{ fontSize: 14, fontWeight: 800, color: key === 'me' ? col.color : C.text, marginBottom: 3 }}>{col.label}</div>
-                <div style={{ fontSize: 11, color: C.muted, lineHeight: 1.4 }}>{col.sub}</div>
-                {key === 'me' && (
-                  <div style={{ marginTop: 8, background: C.accent, color: '#fff', fontSize: 10, fontWeight: 800, borderRadius: 20, padding: '3px 10px', display: 'inline-block', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                    Recommended
-                  </div>
-                )}
+                {c.label}
               </div>
             ))}
           </div>
-
-          {/* Rows */}
-          {COMPARE_ROWS.map((row, i) => {
-            const isCost = row.label.includes('cost');
-            return (
-              <div
-                key={i}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr',
-                  gap: 8,
-                  marginBottom: 4,
-                }}
-              >
-                {/* Label */}
-                <div style={{
-                  background: isCost ? 'rgba(14,165,233,0.05)' : C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 10,
-                  padding: '11px 16px',
-                  fontSize: 13, fontWeight: isCost ? 700 : 500,
-                  color: isCost ? C.text : C.dim,
-                  display: 'flex', alignItems: 'center',
-                }}>
-                  {row.label}
-                </div>
-
-                {/* AI col */}
-                <div style={{
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 10,
-                  padding: '11px 12px',
-                  fontSize: 12.5,
-                  color: isCost ? '#F87171' : C.muted,
-                  fontWeight: isCost ? 700 : 400,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-                  lineHeight: 1.45,
-                }}>
-                  {row.ai}
-                </div>
-
-                {/* DIY col */}
-                <div style={{
-                  background: C.surface,
-                  border: `1px solid ${C.border}`,
-                  borderRadius: 10,
-                  padding: '11px 12px',
-                  fontSize: 12.5,
-                  color: isCost ? '#F87171' : C.muted,
-                  fontWeight: isCost ? 700 : 400,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-                  lineHeight: 1.45,
-                }}>
-                  {row.diy}
-                </div>
-
-                {/* Me col */}
-                <div style={{
-                  background: isCost ? 'rgba(16,185,129,0.08)' : 'rgba(14,165,233,0.07)',
-                  border: '1.5px solid rgba(14,165,233,0.3)',
-                  borderRadius: 10,
-                  padding: '11px 12px',
-                  fontSize: 12.5,
-                  color: isCost ? '#10B981' : C.text,
-                  fontWeight: isCost ? 800 : 500,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center',
-                  lineHeight: 1.45,
-                  boxShadow: isCost ? '0 0 20px rgba(16,185,129,0.1)' : 'none',
-                }}>
-                  {row.me}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Bottom cap for "me" column */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr', gap: 8, marginTop: 4 }}>
-            <div />
-            <div />
-            <div />
-            <div style={{
-              background: 'rgba(14,165,233,0.12)',
-              border: '1.5px solid rgba(14,165,233,0.45)',
-              borderTop: 'none',
-              borderRadius: '0 0 14px 14px',
-              padding: '14px',
-              textAlign: 'center',
-              fontSize: 12.5,
-              color: C.accent,
-              fontWeight: 700,
-              boxShadow: '0 0 40px rgba(14,165,233,0.12)',
-            }}>
-              No monthly trap. You own it forever.
+          {/* Data rows */}
+          {COMPARE_ROWS.slice(0, 6).map((row, i) => (
+            <div key={i} style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr 1fr 1.2fr', borderTop: `1px solid ${C.borderFaint}` }}>
+              <div style={{ padding: '14px 18px', fontSize: 13.5, fontWeight: 600, color: C.text, display: 'flex', alignItems: 'center' }}>{row.label}</div>
+              <div style={{ padding: '14px', fontSize: 13, color: C.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>{row.ai}</div>
+              <div style={{ padding: '14px', fontSize: 13, color: C.muted, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>{row.diy}</div>
+              <div style={{ padding: '14px', fontSize: 13, fontWeight: 700, color: C.accent, background: `${C.accent}0D`, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>{row.me}</div>
             </div>
-          </div>
+          ))}
         </div>
       </motion.div>
 
@@ -383,18 +340,14 @@ function CompareSection() {
       <motion.div
         variants={fadeUp}
         style={{
-          marginTop: 40, background: 'rgba(16,185,129,0.07)',
-          border: '1px solid rgba(16,185,129,0.2)', borderRadius: 16,
-          padding: '20px 28px', display: 'flex', alignItems: 'flex-start', gap: 16,
+          marginTop: 32, background: C.surface,
+          border: `1px solid ${C.border}`, borderLeft: `3px solid ${C.accent}`,
+          padding: '20px 26px', fontSize: 14, color: C.muted, lineHeight: 1.7,
         }}
       >
-        <span style={{ fontSize: 28, flexShrink: 0 }}>💡</span>
-        <div style={{ fontSize: 14, color: C.muted, lineHeight: 1.7 }}>
-          <strong style={{ color: C.text }}>The hidden math: </strong>
-          A ₹1,500/mo Wix plan costs ₹18,000 in Year 1, ₹54,000 by Year 3, and ₹90,000 by Year 5 — with ads, limited SEO, and no real human if something breaks.{' '}
-          My Pro website at ₹22,000 pays itself back in under 15 months and costs nothing after that.
-          The choice is clear.
-        </div>
+        <strong style={{ color: C.text }}>The hidden math: </strong>
+        A ₹1,500/mo Wix plan costs ₹18,000 in Year 1, ₹54,000 by Year 3, and ₹90,000 by Year 5 — with ads, limited SEO, and no real human if something breaks.{' '}
+        My Pro website at ₹22,000 pays itself back in under 15 months and costs nothing after that.
       </motion.div>
     </motion.section>
   );
@@ -409,110 +362,28 @@ const HOW = [
 ];
 
 // ─── FAQ ──────────────────────────────────────────────────
-const FAQ_GROUPS = [
-  {
-    title: 'Placing an order',
-    items: [
-      { q: 'How do I choose the right plan?', a: 'Portfolio suits individuals and students, Small Website suits local businesses and professionals, and Pro Website suits growing businesses that need more pages and functionality. Use the "Help me pick" quiz above the plans if you\'re unsure, or message me directly via the contact bubble.' },
-      { q: 'What happens right after I pay the advance?', a: 'Your slot is locked in immediately. I\'ll reach out within 24 hours by call or WhatsApp to discuss your content, structure, and any references you have in mind.' },
-      { q: 'Can I switch plans or add features after booking?', a: 'Yes — just let me know during our first conversation and I\'ll adjust your quote and balance accordingly before any build work starts.' },
-      { q: 'Are there only 2 project slots available at a time?', a: 'Yes, I only take on 2 projects at once so each one gets proper attention. If both slots are full, you can join the waiting list and I\'ll notify you the moment one opens.' },
-      { q: 'How much does a custom website cost in India?', a: 'Custom websites here start at ₹6,500 for a portfolio site, ₹12,000 for a small business website, and ₹22,000 for a full-featured Pro site — all one-time payments with hosting included free, forever. No hidden fees or recurring charges.' },
-      { q: 'Should I hire a freelancer or an agency for my website?', a: 'For most small businesses, professionals, and students, a solo freelancer offers better value — you work directly with the person building your site (no account managers or handoffs), pricing is more transparent, and turnaround is faster since there\'s no internal approval chain to wait on.' },
-      { q: 'Do you build websites for clinics, dieticians, or local service businesses?', a: 'Yes — recent projects include a nutrition and dietician counseling website (Sheetal\'s Prakritik Nutrition) and a wound care service website (Wound Care by Axcess). I regularly build for healthcare, wellness, and local service businesses alongside portfolios and general small-business sites.' },
-    ],
-  },
-  {
-    title: 'During service',
-    items: [
-      { q: 'How long does a project take?', a: 'Most projects are built within 5-7 days of our first content discussion, depending on plan complexity and how quickly you share content and feedback.' },
-      { q: 'What do I need to provide?', a: 'Your business/profile content, any images or logos you have, and references to sites or styles you like. The more ready this is upfront, the faster we move.' },
-      { q: 'Can I see progress before it\'s finished?', a: 'Yes — I share regular previews during the build phase so you can give feedback before the final version is locked in.' },
-      { q: 'What if I go quiet for a while during the build?', a: 'That\'s fine for short gaps, but if there\'s no response from you for 14+ consecutive days the project may be treated as abandoned under our Terms, with the advance forfeited as a result.' },
-    ],
-  },
-  {
-    title: 'Post-delivery',
-    items: [
-      { q: 'What happens after final payment?', a: 'You get a 7-day review window with 2 free rounds of revisions included. Reply to the confirmation email with any change requests and I\'ll turn them around within 48 hours.' },
-      { q: 'What if I need more than 2 revision rounds?', a: 'Additional rounds after the first 2 free ones are ₹500 each.' },
-      { q: 'Do I own the final website?', a: 'Yes, full ownership and files transfer to you once final payment is complete and the project is marked done.' },
-      { q: 'What if something breaks after delivery?', a: 'Message me via the contact bubble or reply to any project email — I\'ll help sort it out. Ongoing maintenance beyond the free revision window can be arranged separately.' },
-    ],
-  },
-  {
-    title: 'Payments & refunds',
-    items: [
-      { q: 'How much is the advance payment?', a: 'Typically 20-30% of the total project cost depending on the plan, paid upfront to lock your slot. The remaining balance is due only after you\'re satisfied with the final site.' },
-      { q: 'What if I cancel before final payment?', a: 'If you cancel while only the advance has been paid, it\'s refunded in full to your original payment method within 3 business days (this doesn\'t apply if the project was treated as abandoned — see above).' },
-      { q: 'What if I cancel after final payment?', a: 'Once final payment is made or the site is delivered, payments are non-refundable by default. Refunds after this point are considered at BespokeDeploy\'s discretion — reach out and I\'ll hear you out.' },
-      { q: 'Is hosting really free?', a: 'Yes, hosting on Cloudflare Pages or Netlify is ₹0/month forever. A custom domain is optional and paid directly by you to your registrar of choice.' },
-    ],
-  },
-];
-
-function FAQSection() {
-  const [openKey, setOpenKey] = useState(null);
+// Full FAQ content now lives on its own route — see FAQPage.jsx. This is
+// just a compact teaser strip linking there, matching Concept A's minimal
+// "Before you ask" treatment rather than a long inline accordion.
+function FAQTeaser() {
   return (
     <Section id="faq">
-      <motion.div variants={fadeUp} style={{ textAlign: 'center', marginBottom: 48 }}>
-        <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Questions</div>
-        <h2 style={{ fontSize: 40, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>Frequently asked questions</h2>
-      </motion.div>
-
-      <div style={{ maxWidth: 760, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 36 }}>
-        {FAQ_GROUPS.map((group) => (
-          <motion.div key={group.title} variants={fadeUp}>
-            <div style={{ fontSize: 12.5, color: C.accent, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 14 }}>
-              {group.title}
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {group.items.map((item, i) => {
-                const key = `${group.title}-${i}`;
-                const isOpen = openKey === key;
-                return (
-                  <div
-                    key={key}
-                    style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 14, overflow: 'hidden' }}
-                  >
-                    <button
-                      onClick={() => setOpenKey(isOpen ? null : key)}
-                      style={{
-                        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
-                        background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
-                        padding: '16px 20px', fontFamily: 'inherit',
-                      }}
-                    >
-                      <span style={{ fontSize: 14.5, fontWeight: 700, color: C.text }}>{item.q}</span>
-                      <motion.span
-                        animate={{ rotate: isOpen ? 45 : 0 }}
-                        transition={{ duration: 0.2 }}
-                        style={{ flexShrink: 0, fontSize: 20, fontWeight: 400, color: C.accent, lineHeight: 1 }}
-                      >
-                        +
-                      </motion.span>
-                    </button>
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                          style={{ overflow: 'hidden' }}
-                        >
-                          <div style={{ padding: '0 20px 18px', fontSize: 13.5, color: C.muted, lineHeight: 1.65 }}>
-                            {item.a}
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </div>
-          </motion.div>
-        ))}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap',
+        border: `2px solid ${C.text}`, padding: '40px 44px', background: C.surface,
+      }}>
+        <div>
+          <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 10 }}>Questions</div>
+          <h2 style={{ fontFamily: C.fontDisplay, fontSize: 'clamp(24px, 3vw, 34px)', fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>
+            Got questions before you commit?
+          </h2>
+        </div>
+        <a
+          href="/faq"
+          style={{ background: C.text, color: C.bg, borderRadius: 40, padding: '15px 28px', fontSize: 14.5, fontWeight: 700, textDecoration: 'none', whiteSpace: 'nowrap' }}
+        >
+          See all FAQs →
+        </a>
       </div>
     </Section>
   );
@@ -528,31 +399,24 @@ function PlanCard({ plan, onSelect, capacity }) {
   return (
     <motion.div
       variants={fadeUp}
-      whileHover={{ y: -8, transition: { duration: 0.25 } }}
+      whileHover={{ y: -6, transition: { duration: 0.2 } }}
       style={{
-        background: plan.highlight
-          ? 'linear-gradient(160deg, #16163A 0%, #0D0D22 100%)'
-          : C.surface,
-        border: plan.highlight
-          ? `2px solid ${plan.color}`
-          : `1px solid ${C.border}`,
-        borderRadius: 22,
+        background: plan.highlight ? '#111111' : C.surface,
+        border: `2px solid ${plan.highlight ? '#111111' : C.border}`,
+        borderRadius: 0,
         padding: '32px 28px',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
-        boxShadow: plan.highlight ? `0 0 60px ${plan.color}25` : 'none',
-        transition: 'box-shadow .3s',
       }}
     >
       {/* Badge */}
       {plan.badge && (
         <div style={{
-          position: 'absolute', top: -14, left: '50%',
-          transform: 'translateX(-50%)',
-          background: plan.color, color: '#fff',
+          position: 'absolute', top: -14, left: 28,
+          background: C.accent, color: '#fff',
           fontSize: 11, fontWeight: 800, letterSpacing: '0.06em',
-          padding: '4px 16px', borderRadius: 20, whiteSpace: 'nowrap',
+          padding: '4px 14px', borderRadius: 20, whiteSpace: 'nowrap',
           textTransform: 'uppercase',
         }}>
           {plan.badge}
@@ -561,18 +425,14 @@ function PlanCard({ plan, onSelect, capacity }) {
 
       {/* Header */}
       <div style={{ marginBottom: 14 }}>{PLAN_ICONS[plan.id]?.(plan.color)}</div>
-      <div style={{ fontSize: 22, fontWeight: 800, color: plan.highlight ? '#ffffff' : C.text, marginBottom: 4 }}>{plan.name}</div>
+      <div style={{ fontFamily: C.fontDisplay, fontSize: 22, fontWeight: 700, color: plan.highlight ? '#ffffff' : C.text, marginBottom: 4 }}>{plan.name}</div>
       <div style={{ fontSize: 13, color: plan.highlight ? 'rgba(255,255,255,0.6)' : C.muted, marginBottom: 22, lineHeight: 1.55 }}>{plan.tagline}</div>
 
       {/* Price */}
       <div style={{ marginBottom: 26 }}>
         <div style={{ fontSize: 11, color: plan.highlight ? 'rgba(255,255,255,0.5)' : C.muted, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>One-time price</div>
-        <div style={{
-          fontSize: 40, fontWeight: 900, letterSpacing: '-0.02em',
-          background: `linear-gradient(135deg, ${plan.color}, ${plan.color}99)`,
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-        }}>
-          ₹{fmt(plan.price)}
+        <div style={{ fontFamily: C.fontDisplay, fontSize: 42, fontWeight: 800, letterSpacing: '-0.02em', color: C.accent }}>
+          <CountPrice value={plan.price} />
         </div>
         <div style={{ fontSize: 12, color: plan.highlight ? 'rgba(255,255,255,0.5)' : C.muted, marginTop: 4 }}>+ ₹0/month hosting · ⏱ {plan.delivery}</div>
         {timelineNote && (
@@ -631,30 +491,18 @@ function PlanCard({ plan, onSelect, capacity }) {
       <button
         onClick={() => onSelect(plan)}
         style={{
-          background: plan.highlight
-            ? `linear-gradient(135deg, ${plan.color}, ${plan.color}BB)`
-            : plan.colorLight,
-          color: plan.highlight ? '#fff' : plan.color,
-          border: plan.highlight ? 'none' : `1px solid ${plan.color}50`,
-          borderRadius: 13, padding: '15px 20px',
-          fontSize: 15, fontWeight: 700, cursor: 'pointer',
+          background: plan.highlight ? C.accent : 'transparent',
+          color: plan.highlight ? '#fff' : (plan.highlight ? '#fff' : C.text),
+          border: plan.highlight ? 'none' : `2px solid ${C.text}`,
+          borderRadius: 0, padding: '14px 20px',
+          fontSize: 14, fontWeight: 700, cursor: 'pointer',
           width: '100%', transition: 'all .2s',
-          fontFamily: 'inherit', letterSpacing: '0.01em',
+          fontFamily: 'inherit', letterSpacing: '0.01em', textAlign: 'center',
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = plan.color;
-          e.currentTarget.style.color = '#fff';
-          e.currentTarget.style.border = 'none';
-        }}
+        onMouseEnter={(e) => { e.currentTarget.style.background = C.accent; e.currentTarget.style.color = '#fff'; e.currentTarget.style.border = 'none'; }}
         onMouseLeave={(e) => {
-          if (plan.highlight) {
-            e.currentTarget.style.background = `linear-gradient(135deg, ${plan.color}, ${plan.color}BB)`;
-            e.currentTarget.style.color = '#fff';
-          } else {
-            e.currentTarget.style.background = plan.colorLight;
-            e.currentTarget.style.color = plan.color;
-            e.currentTarget.style.border = `1px solid ${plan.color}50`;
-          }
+          if (plan.highlight) { e.currentTarget.style.background = C.accent; e.currentTarget.style.color = '#fff'; }
+          else { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = C.text; e.currentTarget.style.border = `2px solid ${C.text}`; }
         }}
       >
         {capacity && !capacity.available ? `Join Waiting List — ${plan.name}` : `Choose ${plan.name} →`}
@@ -779,7 +627,7 @@ function PlanDecider({ onSelectPlan, plans }) {
               key={q.id}
               initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}
               style={{
-                background: isAnswered ? (ans ? 'rgba(14,165,233,0.07)' : C.bg) : C.bg,
+                background: isAnswered ? (ans ? 'rgba(232,84,44,0.07)' : C.bg) : C.bg,
                 border: `1px solid ${isAnswered && ans ? C.accent + '45' : C.border}`,
                 borderRadius: 12, padding: '14px 18px', transition: 'all .2s',
               }}
@@ -987,7 +835,7 @@ function AvatarSVG() {
       {/* Body */}
       <ellipse cx="110" cy="200" rx="62" ry="46" fill="#0D2B4A"/>
       {/* Shirt */}
-      <path d="M80 168 Q110 182 140 168 L148 198 Q110 210 72 198Z" fill="#0EA5E9" opacity="0.9"/>
+      <path d="M80 168 Q110 182 140 168 L148 198 Q110 210 72 198Z" fill="#E8542C" opacity="0.9"/>
       {/* Head */}
       <circle cx="110" cy="108" r="50" fill="#F4C08A"/>
       {/* Hair */}
@@ -1028,8 +876,8 @@ function CoinFlip() {
     position: 'absolute', width: '100%', height: '100%',
     backfaceVisibility: 'hidden', WebkitBackfaceVisibility: 'hidden',
     borderRadius: '50%', overflow: 'hidden',
-    border: '3px solid rgba(14,165,233,0.55)',
-    boxShadow: '0 0 0 8px rgba(14,165,233,0.07), 0 24px 60px rgba(14,165,233,0.30)',
+    border: '3px solid rgba(232,84,44,0.55)',
+    boxShadow: '0 0 0 8px rgba(232,84,44,0.07), 0 24px 60px rgba(232,84,44,0.30)',
   };
 
   return (
@@ -1054,9 +902,9 @@ function CoinFlip() {
           {/* Fallback wordmark */}
           <div style={{ display: 'none', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: '-0.03em' }}>
-              <span style={{ color: '#0EA5E9' }}>D</span><span style={{ color: C.text }}>ev</span>
+              <span style={{ color: C.accent }}>D</span><span style={{ color: C.text }}>ev</span>
             </div>
-            <div style={{ fontSize: 11, color: 'rgba(14,165,233,0.65)', letterSpacing: '0.16em', textTransform: 'uppercase', marginTop: 4 }}>BespokeDeploy.in</div>
+            <div style={{ fontSize: 11, color: 'rgba(232,84,44,0.75)', letterSpacing: '0.16em', textTransform: 'uppercase', marginTop: 4 }}>BespokeDeploy.in</div>
           </div>
           <div style={{ position: 'absolute', top: 0, bottom: 0, width: '35%', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.07), transparent)', animation: 'coin-shine 5s ease-in-out infinite', pointerEvents: 'none' }} />
         </div>
@@ -1077,6 +925,132 @@ function CoinFlip() {
         </div>
       </motion.div>
     </div>
+  );
+}
+
+// ─── Hero projector FX (dark mode only) ─────────────────────
+// Superseded by HeroLightFX.jsx — a real WebGL shader (physically-inspired
+// cone falloff, fBm/curl-noise smoke, tunable dust motes) with a DOM overlay
+// synced to the same math for the headline "catching" the light. See that
+// file for the implementation and HERO_LIGHT_CONFIG for tuning knobs.
+
+// ─── Marquee strip halves ──────────────────────────────────
+// Renders exactly 2 halves (required for the translateX(-50%) loop trick),
+// each half repeating `words` STRIP_REPEAT times so a half's rendered width
+// comfortably exceeds any real viewport — otherwise on wide screens the
+// content runs out mid-scroll and a blank gap flashes before the loop.
+const STRIP_REPEAT = 6;
+function StripHalves({ words }) {
+  const items = [];
+  words.forEach((w) => items.push({ t: w }, { s: true }));
+  return Array(2).fill(0).flatMap((_, half) => (
+    Array(STRIP_REPEAT).fill(0).flatMap((__, rep) => (
+      items.map((item, i) => (
+        <span key={`${half}-${rep}-${i}`} className={item.s ? 'accent' : undefined} style={{ marginRight: 48 }}>
+          {item.s ? '★' : item.t}
+        </span>
+      ))
+    ))
+  ));
+}
+
+// ─── Count-up price — animates ₹0 → the real price once scrolled into view ──
+function CountPrice({ value }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '-40px' });
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    const dur = 1100;
+    const start = performance.now();
+    let raf;
+    const step = (now) => {
+      const p = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(value * eased));
+      if (p < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [inView, value]);
+  return <span ref={ref}>₹{fmt(display)}</span>;
+}
+
+// ─── Site preview modal — small "browser window" showing the live site,
+// click anywhere on the preview to open the real site in a new tab.
+// (Some sites block iframe embedding via X-Frame-Options — the window
+// chrome and click-through still work fine even if the preview stays blank.)
+function SitePreviewModal({ link, onClose }) {
+  return (
+    <AnimatePresence>
+      {link && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={onClose}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.75)', zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.97 }}
+            transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: 'min(920px, 94vw)', height: 'min(600px, 82vh)', background: C.surface, border: `2px solid ${C.text}`, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
+          >
+            {/* Window title bar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: `1px solid ${C.borderFaint}`, background: C.bg, flexShrink: 0 }}>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EF4444' }} />
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#F59E0B' }} />
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10B981' }} />
+              </div>
+              <div style={{ flex: 1, textAlign: 'center', fontSize: 12.5, color: C.muted, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {link.href.replace(/^https?:\/\//, '')}
+              </div>
+              <button onClick={onClose} aria-label="Close preview" style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, color: C.muted, lineHeight: 1 }}>×</button>
+            </div>
+
+            {/* Live preview — click anywhere to open the real site */}
+            <div
+              onClick={() => window.open(link.href, '_blank', 'noopener,noreferrer')}
+              title={`Open ${link.label} in a new tab`}
+              style={{ position: 'relative', flex: 1, cursor: 'pointer', background: link.noPreview ? C.bg : '#fff' }}
+            >
+              {link.noPreview && link.previewImage ? (
+                // This site blocks iframe embedding (X-Frame-Options) — show a
+                // static screenshot instead, since no live preview is possible.
+                <img
+                  src={link.previewImage}
+                  alt={`${link.label} preview`}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'top', display: 'block' }}
+                />
+              ) : link.noPreview ? (
+                // This site blocks being embedded in an iframe (X-Frame-Options) —
+                // show a clean branded fallback instead of the browser's broken-page icon.
+                <div style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 40, textAlign: 'center' }}>
+                  <div style={{ fontFamily: C.fontDisplay, fontSize: 22, fontWeight: 700, color: C.text }}>{link.label}</div>
+                  <p style={{ fontSize: 13.5, color: C.muted, maxWidth: 360, lineHeight: 1.6 }}>
+                    This site doesn't allow live previews to be embedded — click anywhere to open it directly.
+                  </p>
+                </div>
+              ) : (
+                <iframe
+                  src={link.href}
+                  title={link.label}
+                  loading="lazy"
+                  style={{ width: '100%', height: '100%', border: 'none', pointerEvents: 'none' }}
+                />
+              )}
+              <div style={{
+                position: 'absolute', bottom: 16, right: 16,
+                background: C.text, color: C.bg, fontSize: 12.5, fontWeight: 700,
+                padding: '8px 16px', borderRadius: 40, boxShadow: '0 6px 20px rgba(0,0,0,0.25)',
+              }}>
+                Click to visit {link.label} ↗
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -1226,7 +1200,7 @@ const LEGAL = {
   },
 };
 
-function LegalModal({ doc, onClose, isDark }) {
+function LegalModal({ doc, onClose }) {
   const content = LEGAL[doc];
   useEffect(() => {
     const prev = document.body.style.overflow;
@@ -1245,8 +1219,8 @@ function LegalModal({ doc, onClose, isDark }) {
         exit={{ opacity: 0, y: 20, scale: 0.97 }}
         transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
         style={{
-          background: isDark ? '#0D0D1A' : '#ffffff',
-          border: `1px solid ${isDark ? '#1E1E40' : '#CBD5E1'}`,
+          background: '#0D0D1A',
+          border: '1px solid #1E1E40',
           borderRadius: 20, padding: '40px 48px', maxWidth: 780, width: '100%',
           boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
         }}
@@ -1254,24 +1228,24 @@ function LegalModal({ doc, onClose, isDark }) {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
           <div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: isDark ? '#F1F0FF' : '#0F172A', marginBottom: 4 }}>{content.title}</div>
-            <div style={{ fontSize: 12, color: isDark ? '#6B7280' : '#64748B' }}>{content.effective}</div>
+            <div style={{ fontSize: 24, fontWeight: 800, color: '#F1F0FF', marginBottom: 4 }}>{content.title}</div>
+            <div style={{ fontSize: 12, color: '#6B7280' }}>{content.effective}</div>
           </div>
           <button
             onClick={onClose}
-            style={{ background: 'transparent', border: `1px solid ${isDark ? '#1E1E40' : '#CBD5E1'}`, borderRadius: 10, width: 36, height: 36, cursor: 'pointer', fontSize: 18, color: isDark ? '#9CA3AF' : '#475569', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 16 }}
+            style={{ background: 'transparent', border: '1px solid #1E1E40', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', fontSize: 18, color: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 16 }}
           >×</button>
         </div>
         {/* Body */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
           {content.sections.map((s) => (
             <div key={s.heading}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#0EA5E9', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.heading}</div>
-              <div style={{ fontSize: 14, color: isDark ? '#9CA3AF' : '#475569', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{s.body}</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#E8542C', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.heading}</div>
+              <div style={{ fontSize: 14, color: '#9CA3AF', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{s.body}</div>
             </div>
           ))}
         </div>
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: `1px solid ${isDark ? '#1E1E40' : '#CBD5E1'}`, textAlign: 'center', fontSize: 12, color: isDark ? '#6B7280' : '#94A3B8' }}>
+        <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid #1E1E40', textAlign: 'center', fontSize: 12, color: '#6B7280' }}>
           © 2026 BespokeDeploy · bespokedeploy.in · debarun.ghosh.2024@gmail.com
         </div>
       </motion.div>
@@ -1285,7 +1259,7 @@ function CapacityBanner({ capacity }) {
   if (capacity.available) {
     return (
       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 20, padding: '6px 14px', fontSize: 12.5, color: '#10B981', fontWeight: 600, marginBottom: 18 }}>
-        ✅ {capacity.slotsAvailable} of {capacity.maxSlots} project slot{capacity.maxSlots !== 1 ? 's' : ''} open right now
+        ✅ Currently accepting new projects
       </div>
     );
   }
@@ -1380,7 +1354,7 @@ function WaitlistModal({ plan, maxSlots, urgentAvailable, reason = 'capacity', o
             <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
               {isUnavailable
                 ? `This package is paused for now. Leave your details and I'll reach out personally the moment it reopens.`
-                : `I only take on ${maxSlots || 2} project${(maxSlots || 2) !== 1 ? 's' : ''} at a time so each one gets full attention. Leave your details and I'll notify you the moment a slot opens.`}
+                : `I'm at full capacity right now so every project gets proper attention. Leave your details and I'll notify you the moment a slot opens.`}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <input style={inputSt} placeholder="Your full name" value={form.name} onChange={set('name')} required />
@@ -1397,8 +1371,8 @@ function WaitlistModal({ plan, maxSlots, urgentAvailable, reason = 'capacity', o
                   />
                   <span>
                     Mark as urgent
-                    {!urgentAvailable && <span style={{ color: C.muted }}> — this week's urgent request is already taken</span>}
-                    {urgentAvailable && <span style={{ color: C.muted }}> — only 1 urgent request allowed per week, gets priority when a slot opens</span>}
+                    {!urgentAvailable && <span style={{ color: C.muted }}> — urgent priority is currently taken</span>}
+                    {urgentAvailable && <span style={{ color: C.muted }}> — gets priority when a slot opens</span>}
                   </span>
                 </label>
               )}
@@ -1578,28 +1552,27 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
   const allPlans = PLANS.map(plan => {
     const ov = siteSettings?.plans?.[plan.id];
     if (!ov) return plan;
-    // Merge addon prices too
-    const addons = plan.addons.map(a => {
+    // Merge admin-set prices/enabled onto the hardcoded add-ons…
+    const builtInAddons = plan.addons.map(a => {
       const aov = siteSettings?.addons?.[a.id];
       return aov ? { ...a, price: aov.price ?? a.price, enabled: aov.enabled ?? true } : a;
-    }).filter(a => a.enabled !== false);
+    });
+    // …and append any admin-created custom add-ons for this plan.
+    const customAddons = (siteSettings?.custom_addons || []).filter(a => a.plan_id === plan.id);
+    const addons = [...builtInAddons, ...customAddons].filter(a => a.enabled !== false);
     return { ...plan, price: ov.price ?? plan.price, addons, _enabled: ov.enabled ?? true };
   });
   const effectivePlans = allPlans.filter(plan => plan._enabled !== false);
   const allPlansUnavailable = siteSettings != null && effectivePlans.length === 0;
-  const [isDark, setIsDark] = useState(false);
-  const [showDarkPrompt, setShowDarkPrompt] = useState(false);
+  // Dark is the site's only theme now — no toggle, no light mode.
+  const heroHeadlineRef = useRef(null); // "make people" line — the light's aim target
+  const heroTitleRef = useRef(null); // whole h1 — gets the lit drop-shadow
+  const [previewLink, setPreviewLink] = useState(null); // { href, label } | null
   const [legalDoc, setLegalDoc] = useState(null); // 'privacy' | 'tnc' | null
   const [capacity, setCapacity] = useState(null);
   const [waitlistModal, setWaitlistModal] = useState(null); // { plan, reason } | null
   const [promos, setPromos] = useState([]);
   const [promoDismissed, setPromoDismissed] = useState(false);
-  useEffect(() => {
-    document.documentElement.dataset.theme = 'light';
-    // Show dark mode prompt after 3s on first visit
-    const timer = setTimeout(() => setShowDarkPrompt(true), 3000);
-    return () => clearTimeout(timer);
-  }, []);
   useEffect(() => {
     fetch('/api/capacity').then(r => r.json()).then(setCapacity).catch(() => {});
   }, []);
@@ -1613,12 +1586,6 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
     if (capacity && !capacity.available && !hasBypass) { setWaitlistModal({ plan, reason: 'capacity' }); return; }
     onSelectPlan(plan);
   };
-  const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    setShowDarkPrompt(false);
-    document.documentElement.dataset.theme = next ? '' : 'light';
-  };
 
   return (
     <div>
@@ -1628,465 +1595,248 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
         )}
       </AnimatePresence>
 
+      {/* Nav — page-level sticky bar, not clipped by the hero's overflow */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        style={{
+          position: 'sticky', top: 0, zIndex: 30,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '20px 40px', borderBottom: `1px solid ${C.borderFaint}`,
+          background: 'rgba(var(--c-bg-rgb), 0.85)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+        }}
+      >
+        <a href="/" style={{ fontFamily: C.fontDisplay, fontWeight: 800, fontSize: 19, letterSpacing: '-0.01em', color: C.text, textDecoration: 'none' }}>
+          BespokeDeploy<span style={{ color: C.accent }}>.</span>
+        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 36, fontSize: 14, fontWeight: 600, color: C.muted, transition: 'color 0.3s ease' }}>
+          <a href="#usps" onClick={(e) => { e.preventDefault(); document.getElementById('usps')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>Why me</a>
+          <a href="#plans" onClick={(e) => { e.preventDefault(); document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>Pricing</a>
+          <a href="/faq" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>FAQ</a>
+          <a href="/about" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>About</a>
+        </div>
+        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button
+            onClick={() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{ background: C.text, color: C.bg, border: 'none', borderRadius: 40, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
+          >
+            Start a project →
+          </button>
+        </div>
+      </motion.div>
+
       {/* ── HERO ── */}
       <div className="hero-root">
-        {/* Animated background orbs */}
+        {/* Background — two blurred blobs only, matching the mockup (no grid, no old orbs) */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
-          <div style={{ position: 'absolute', width: 700, height: 700, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.13) 0%, transparent 70%)', top: '-10%', left: '-5%', animation: 'floatA 12s ease-in-out infinite' }} />
-          <div style={{ position: 'absolute', width: 600, height: 600, borderRadius: '50%', background: 'radial-gradient(circle, rgba(236,72,153,0.10) 0%, transparent 70%)', top: '30%', right: '-10%', animation: 'floatB 14s ease-in-out infinite' }} />
-          <div style={{ position: 'absolute', width: 500, height: 500, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.09) 0%, transparent 70%)', bottom: '0%', left: '30%', animation: 'floatA 16s ease-in-out infinite reverse' }} />
-          {/* Grid overlay */}
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: `linear-gradient(${C.borderFaint} 1px, transparent 1px), linear-gradient(90deg, ${C.borderFaint} 1px, transparent 1px)`, backgroundSize: '60px 60px', opacity: 0.4 }} />
+          <div style={{ position: 'absolute', width: 480, height: 480, borderRadius: '50%', background: '#E8542C', filter: 'blur(90px)', opacity: 0.22, top: '-18%', right: '-8%' }} />
+          <div style={{ position: 'absolute', width: 360, height: 360, borderRadius: '50%', background: '#FFD23F', filter: 'blur(90px)', opacity: 0.18, bottom: '-12%', left: '-6%' }} />
         </div>
 
-        {/* Nav */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="nav-root"
-        >
-          <img
-            src={isDark ? '/main_logo_dark.png' : '/main_logo_light.png'}
-            alt="BespokeDeploy logo"
-            className="nav-logo"
-          />
-          <div className="nav-right">
-            <div className="nav-pills">
-              {['Portfolio', 'Small Website', 'Pro'].map((p) => (
-                <span key={p} className="nav-pill" style={{ color: C.muted, border: `1px solid ${C.border}` }}>{p}</span>
+        {/* Projector light + smoke — dark mode only. WebGL shader + synced
+            DOM text-overlay; aims at heroHeadlineRef (the "make people" line). */}
+        <HeroLightFX targetRef={heroHeadlineRef} shadowRef={heroTitleRef} enabled={true} />
+
+        {/* Hero content — Concept A: big word-reveal headline, no avatar */}
+        <div className="hero-inner" style={{ flexDirection: 'column', alignItems: 'flex-start', textAlign: 'left', gap: 0, maxWidth: 1080, width: '100%', padding: 'clamp(40px, 7vh, 90px) clamp(20px, 4vw, 40px)' }}>
+
+          <motion.div variants={fadeUp} initial="hidden" animate="show" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: C.accent, marginBottom: 26 }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: C.accent, animation: 'pulse-ring 1.6s ease-in-out infinite' }} />
+            {siteSettings?.hero?.tagline || 'Custom websites · Free hosting · Built in 5-7 days'}
+          </motion.div>
+
+          <h1 ref={heroTitleRef} style={{ fontFamily: C.fontDisplay, fontWeight: 800, fontSize: 'clamp(42px, 8.2vw, 112px)', lineHeight: 0.92, letterSpacing: '-0.035em', color: C.text, marginBottom: 30, maxWidth: 960 }}>
+            {['Websites that', 'make people'].map((line, li) => (
+              <div key={li} ref={li === 1 ? heroHeadlineRef : undefined} style={{ overflow: 'hidden' }}>
+                {line.split(' ').map((word, wi) => (
+                  <span key={wi} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'top', marginRight: '0.28em' }}>
+                    <motion.span
+                      initial={{ y: '110%' }}
+                      animate={{ y: 0 }}
+                      transition={{ duration: 0.7, delay: 0.15 + (li * 2 + wi) * 0.06, ease: [0.19, 1, 0.22, 1] }}
+                      style={{ display: 'inline-block' }}
+                    >
+                      {word}
+                    </motion.span>
+                  </span>
+                ))}
+              </div>
+            ))}
+            <div style={{ overflow: 'hidden' }}>
+              {'stop scrolling.'.split(' ').map((word, wi) => (
+                <span key={wi} style={{ display: 'inline-block', overflow: 'hidden', verticalAlign: 'top', marginRight: '0.28em' }}>
+                  <motion.span
+                    initial={{ y: '110%' }}
+                    animate={{ y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.15 + (4 + wi) * 0.06, ease: [0.19, 1, 0.22, 1] }}
+                    style={{
+                      display: 'inline-block',
+                      background: 'linear-gradient(135deg, #E8542C 0%, #EC4899 50%, #F0714A 100%)',
+                      WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+                    }}
+                  >
+                    {word}
+                  </motion.span>
+                </span>
               ))}
             </div>
-            {/* Theme toggle */}
-            <div style={{ position: 'relative', marginLeft: 8 }}>
-              {/* Dark mode prompt bubble */}
-              {showDarkPrompt && !isDark && (
-                <motion.div
-                  initial={{ opacity: 0, y: 6, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  className="dark-prompt-bubble"
-                >
-                  {/* Tail */}
-                  <div style={{ position: 'absolute', top: -7, right: 10, width: 12, height: 12, background: '#1a1a3a', border: '1px solid rgba(14,165,233,0.4)', borderBottom: 'none', borderRight: 'none', transform: 'rotate(45deg)' }} />
-                  <div style={{ fontSize: 12, color: '#e0e8ff', fontWeight: 600, lineHeight: 1.4 }}>
-                    🌙 Prefer dark mode?
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button
-                      onClick={toggleTheme}
-                      style={{ fontSize: 11, fontWeight: 700, background: '#0EA5E9', color: '#fff', border: 'none', borderRadius: 8, padding: '5px 12px', cursor: 'pointer' }}
-                    >
-                      Switch to Dark
-                    </button>
-                    <button
-                      onClick={() => setShowDarkPrompt(false)}
-                      style={{ fontSize: 11, fontWeight: 600, background: 'transparent', color: '#6B7280', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer' }}
-                    >
-                      No thanks
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-              <button
-                onClick={toggleTheme}
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                style={{
-                  background: C.surface2, border: `1px solid ${C.border}`,
-                  borderRadius: 20, width: 36, height: 36,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', fontSize: 16, transition: 'all .2s',
-                  flexShrink: 0,
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; }}
-              >
-                {isDark ? '☀️' : '🌙'}
-              </button>
-            </div>
-          </div>
-        </motion.div>
+          </h1>
 
-        {/* Hero content — split layout */}
-        <div className="hero-inner">
-
-          {/* Left: Text */}
-          <motion.div
-            variants={stagger(0.1)}
-            initial="hidden"
-            animate="show"
-            className="hero-text"
+          <motion.p
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.9, duration: 0.6 }}
+            style={{ fontSize: 18, color: C.muted, lineHeight: 1.65, maxWidth: 520, marginBottom: 40, fontWeight: 400 }}
           >
-            <motion.div variants={fadeUp} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: `${C.accent}18`, border: `1px solid ${C.accent}35`, borderRadius: 20, padding: '6px 16px', fontSize: 12.5, color: C.accent, fontWeight: 600, marginBottom: 28, letterSpacing: '0.04em' }}>
-              {siteSettings?.hero?.tagline || '🚀 Custom websites · Free hosting · Built in 5-7 days'}
-            </motion.div>
+            {siteSettings?.hero?.subtitle || 'Affordable custom websites for small businesses, professionals & students in India — transparent pricing from ₹6,500, zero monthly fees, delivered in 5-7 days.'}
+          </motion.p>
 
-            <motion.h1
-              variants={fadeUp}
-              className="hero-title"
-              style={{ fontWeight: 900, lineHeight: 1.06, letterSpacing: '-0.03em', marginBottom: 22, color: C.text }}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.05, duration: 0.5 }}
+            style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center', marginBottom: 34 }}
+          >
+            <button
+              onClick={() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{
+                background: '#E8542C',
+                color: '#fff', border: 'none', borderRadius: 40,
+                padding: '17px 34px', fontSize: 16, fontWeight: 700,
+                cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.01em',
+                boxShadow: '0 8px 32px rgba(232,84,44,0.35)',
+                transition: 'transform .2s, box-shadow .2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(232,84,44,0.45)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(232,84,44,0.35)'; }}
             >
-              Custom website design,{' '}
-              <span style={{
-                background: 'linear-gradient(135deg, #0EA5E9 0%, #EC4899 50%, #38BDF8 100%)',
-                WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-                display: 'inline-block',
-              }}>
-                built fast & affordable.
-              </span>
-            </motion.h1>
-
-            <motion.p variants={fadeUp} style={{ fontSize: 17.5, color: C.muted, lineHeight: 1.65, maxWidth: 480, marginBottom: 36, fontWeight: 400 }}>
-              {siteSettings?.hero?.subtitle || 'Affordable custom websites for small businesses, professionals & students in India — transparent pricing from ₹6,500, zero monthly fees, delivered in 5-7 days.'}
-            </motion.p>
-
-            <motion.div variants={fadeUp} style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button
-                onClick={() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' })}
-                style={{
-                  background: 'linear-gradient(135deg, #0EA5E9, #38BDF8)',
-                  color: '#fff', border: 'none', borderRadius: 13,
-                  padding: '16px 32px', fontSize: 16, fontWeight: 700,
-                  cursor: 'pointer', fontFamily: 'inherit', letterSpacing: '0.01em',
-                  boxShadow: '0 8px 32px rgba(14,165,233,0.35)',
-                  transition: 'transform .2s, box-shadow .2s',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 40px rgba(14,165,233,0.45)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(14,165,233,0.35)'; }}
-              >
-                {siteSettings?.hero?.cta || 'See Plans & Pricing'}
-              </button>
-              <button
-                onClick={() => document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth' })}
-                style={{
-                  background: 'transparent',
-                  color: C.muted, border: `1px solid ${C.border}`,
-                  borderRadius: 13, padding: '16px 24px',
-                  fontSize: 15, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all .2s',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
-              >
-                Why me? 🤔
-              </button>
-              <a
-                href="/about"
-                style={{
-                  background: 'transparent',
-                  color: C.muted, border: `1px solid ${C.border}`,
-                  borderRadius: 13, padding: '16px 24px',
-                  fontSize: 15, fontWeight: 600,
-                  cursor: 'pointer', fontFamily: 'inherit',
-                  transition: 'all .2s', textDecoration: 'none',
-                  display: 'inline-flex', alignItems: 'center',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
-                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
-              >
-                👋 About Me
-              </a>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: C.muted, fontSize: 14 }}>
-                <span style={{ color: C.green }}>✓</span> No obligation
-                <span style={{ color: C.green }}>✓</span> Hosting ₹0/mo
-              </div>
-            </motion.div>
+              {siteSettings?.hero?.cta || 'See plans & pricing →'}
+            </button>
+            <button
+              onClick={() => document.getElementById('compare')?.scrollIntoView({ behavior: 'smooth' })}
+              style={{
+                background: 'transparent',
+                color: C.muted, border: `2px solid ${C.border}`,
+                borderRadius: 40, padding: '15px 24px',
+                fontSize: 15, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .2s',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+            >
+              Why me?
+            </button>
+            <a
+              href="/about"
+              style={{
+                background: 'transparent',
+                color: C.muted, border: `2px solid ${C.border}`,
+                borderRadius: 40, padding: '15px 24px',
+                fontSize: 15, fontWeight: 600,
+                cursor: 'pointer', fontFamily: 'inherit',
+                transition: 'all .2s', textDecoration: 'none',
+                display: 'inline-flex', alignItems: 'center',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.text; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+            >
+              About me
+            </a>
           </motion.div>
 
-          {/* Right: Coin + compact mobile links */}
-          <div className="hero-coin-section">
+          {/* Trust row — recent client work, folded in as a compact inline strip instead of floating bubbles */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.85, x: 40 }}
-            animate={{ opacity: 1, scale: 1, x: 0 }}
-            transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="hero-coin-wrap"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.25, duration: 0.5 }}
+            style={{ display: 'flex', alignItems: 'center', gap: 22, flexWrap: 'wrap', fontSize: 13, color: C.muted }}
           >
-            {/* Spinning decorative rings */}
-            <div style={{ position: 'absolute', inset: -24, borderRadius: '50%', border: '1px dashed rgba(14,165,233,0.35)', animation: 'spin-slow 18s linear infinite', pointerEvents: 'none' }} />
-            <div style={{ position: 'absolute', inset: -48, borderRadius: '50%', border: '1px dashed rgba(236,72,153,0.2)', animation: 'spin-slow 28s linear infinite reverse', pointerEvents: 'none' }} />
-
-            {/* Glow */}
-            <div style={{ position: 'absolute', inset: -10, borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.25) 0%, transparent 70%)', filter: 'blur(24px)', pointerEvents: 'none' }} />
-
-            {/* Coin */}
-            <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%' }}>
-              <CoinFlip />
-            </div>
-
-            {/* Bubble: Portfolio — top-left */}
-            <motion.a
-              href="https://debarunghosh.netlify.app/"
-              target="_blank" rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0, x: 10, y: 10 }}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              transition={{ delay: 1.1, type: 'spring', stiffness: 260, damping: 18 }}
-              whileHover={{ scale: 1.08, y: -3 }}
-              className="hero-bubble"
-              style={{
-                position: 'absolute', top: 10, left: -60,
-                background: isDark ? 'linear-gradient(135deg, #1a1a3a, #12122a)' : '#ffffff',
-                border: '1px solid rgba(14,165,233,0.5)',
-                borderRadius: '18px 18px 18px 4px',
-                padding: '10px 14px',
-                textDecoration: 'none', zIndex: 10,
-                boxShadow: isDark ? '0 8px 24px rgba(14,165,233,0.25)' : '0 8px 24px rgba(14,165,233,0.15)',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: C.green }}>✓</span> No obligation</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}><span style={{ color: C.green }}>✓</span> Hosting ₹0/mo</span>
+            <span style={{ width: 1, height: 14, background: C.border }} />
+            <span style={{ fontWeight: 700, color: C.text }}>Recent work:</span>
+            {[
+              { href: 'https://debarunghosh.netlify.app/', label: 'My Portfolio' },
+              { href: 'https://sheetalchandel.com/', label: 'Sheetal Chandel', noPreview: true, previewImage: '/preview-sheetalchandel.jpg' },
+              { href: 'https://woundcarebyaxcess.com/', label: 'Wound Care by Axcess' },
+            ].map((l) => (
+              <button
+                key={l.href}
+                onClick={() => setPreviewLink(l)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', color: C.text, fontWeight: 600, fontSize: 13, textDecoration: 'none', borderBottom: `1px solid ${C.border}`, paddingBottom: 1 }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.text; }}
+              >
+                {l.label} →
+              </button>
+            ))}
+            <span style={{ width: 1, height: 14, background: C.border }} />
+            <a
+              href="https://www.linkedin.com/in/debarunghosh2024/" target="_blank" rel="noopener noreferrer"
+              style={{ color: C.muted, fontWeight: 600, textDecoration: 'none', borderBottom: `1px solid ${C.border}`, paddingBottom: 1 }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
             >
-              {/* Portfolio icon */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <rect width="24" height="24" rx="5" fill="rgba(14,165,233,0.15)"/>
-                <circle cx="12" cy="9" r="3.5" fill="#0EA5E9"/>
-                <path d="M5 19c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="#0EA5E9" strokeWidth="1.8" strokeLinecap="round"/>
-              </svg>
-              <div>
-                <div style={{ fontSize: 10, color: 'rgba(14,165,233,0.9)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1 }}>My Portfolio</div>
-                <div style={{ fontSize: 11.5, color: C.text, fontWeight: 600, marginTop: 2 }}>View my work →</div>
-              </div>
-              {/* Bubble tail */}
-              <div style={{ position: 'absolute', bottom: -7, left: 14, width: 12, height: 12, background: isDark ? '#1a1a3a' : '#ffffff', border: '1px solid rgba(14,165,233,0.5)', borderTop: 'none', borderRight: 'none', transform: 'rotate(-45deg)', borderRadius: '0 0 0 3px' }} />
-            </motion.a>
-
-            {/* Bubble: Wound Care by Axcess — top-center */}
-            <motion.a
-              href="https://woundcarebyaxcess.com/"
-              target="_blank" rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0, y: -10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ delay: 1.4, type: 'spring', stiffness: 260, damping: 18 }}
-              whileHover={{ scale: 1.08, y: -3 }}
-              className="hero-bubble"
-              style={{
-                position: 'absolute', top: -55, left: '50%', transform: 'translateX(-50%)',
-                background: isDark ? 'linear-gradient(135deg, #1a1a3a, #12122a)' : '#ffffff',
-                border: '1px solid rgba(239,68,68,0.5)',
-                borderRadius: '18px 18px 18px 18px',
-                padding: '10px 14px',
-                textDecoration: 'none', zIndex: 10,
-                boxShadow: isDark ? '0 8px 24px rgba(239,68,68,0.2)' : '0 8px 24px rgba(239,68,68,0.12)',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              {/* Wound care icon — medical cross */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <rect width="24" height="24" rx="5" fill="rgba(239,68,68,0.15)"/>
-                <path d="M11 6h2v5h5v2h-5v5h-2v-5H6v-2h5V6z" fill="#EF4444"/>
-              </svg>
-              <div>
-                <div style={{ fontSize: 10, color: 'rgba(239,68,68,0.9)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1 }}>Recent Client</div>
-                <div style={{ fontSize: 11.5, color: C.text, fontWeight: 600, marginTop: 2 }}>Wound Care by Axcess →</div>
-              </div>
-              {/* Bubble tail */}
-              <div style={{ position: 'absolute', bottom: -7, left: '50%', transform: 'translateX(-50%) rotate(45deg)', width: 12, height: 12, background: isDark ? '#1a1a3a' : '#ffffff', border: '1px solid rgba(239,68,68,0.5)', borderTop: 'none', borderLeft: 'none', borderRadius: '0 0 3px 0' }} />
-            </motion.a>
-
-            {/* Bubble: Customer — top-right */}
-            <motion.a
-              href="https://sheetalchandel.com/"
-              target="_blank" rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0, x: -10, y: 10 }}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              transition={{ delay: 1.3, type: 'spring', stiffness: 260, damping: 18 }}
-              whileHover={{ scale: 1.08, y: -3 }}
-              className="hero-bubble"
-              style={{
-                position: 'absolute', top: 50, right: -70,
-                background: isDark ? 'linear-gradient(135deg, #1a1a3a, #12122a)' : '#ffffff',
-                border: '1px solid rgba(16,185,129,0.5)',
-                borderRadius: '18px 18px 4px 18px',
-                padding: '10px 14px',
-                textDecoration: 'none', zIndex: 10,
-                boxShadow: isDark ? '0 8px 24px rgba(16,185,129,0.2)' : '0 8px 24px rgba(16,185,129,0.12)',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              {/* Sheetal / nutrition icon — leaf */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <rect width="24" height="24" rx="5" fill="rgba(16,185,129,0.15)"/>
-                <path d="M12 19c0 0-7-4-7-10 0 0 4-3 7-3s7 3 7 3c0 6-7 10-7 10z" fill="#10B981"/>
-                <path d="M12 19V9" stroke="white" strokeWidth="1.4" strokeLinecap="round"/>
-                <path d="M12 14c-2-1.5-3.5-3-3.5-5" stroke="white" strokeWidth="1.1" strokeLinecap="round"/>
-              </svg>
-              <div>
-                <div style={{ fontSize: 10, color: 'rgba(16,185,129,0.9)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1 }}>Recent Client</div>
-                <div style={{ fontSize: 11.5, color: C.text, fontWeight: 600, marginTop: 2 }}>Sheetal Chandel →</div>
-              </div>
-              {/* Bubble tail */}
-              <div style={{ position: 'absolute', bottom: -7, right: 14, width: 12, height: 12, background: isDark ? '#1a1a3a' : '#ffffff', border: '1px solid rgba(16,185,129,0.5)', borderTop: 'none', borderLeft: 'none', transform: 'rotate(45deg)', borderRadius: '0 0 3px 0' }} />
-            </motion.a>
-
-            {/* Bubble: insight-ai — bottom-left */}
-            <motion.a
-              href="https://insight-ai.dev/"
-              target="_blank" rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0, x: 10, y: 10 }}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              transition={{ delay: 1.1, type: 'spring', stiffness: 260, damping: 18 }}
-              whileHover={{ scale: 1.08, y: -3 }}
-              className="hero-bubble"
-              style={{
-                position: 'absolute', bottom: 70, left: -35,
-                background: isDark ? 'linear-gradient(135deg, #1a1a3a, #12122a)' : '#ffffff',
-                border: '1px solid rgba(14,165,233,0.5)',
-                borderRadius: '18px 18px 4px 18px',
-                padding: '10px 14px',
-                textDecoration: 'none', zIndex: 10,
-                boxShadow: isDark ? '0 8px 24px rgba(14,165,233,0.2)' : '0 8px 24px rgba(14,165,233,0.12)',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              {/* insight-ai icon */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <rect width="24" height="24" rx="5" fill="rgba(14,165,233,0.15)"/>
-                <circle cx="12" cy="12" r="4" fill="none" stroke="#0EA5E9" strokeWidth="1.6"/>
-                <circle cx="12" cy="12" r="1.5" fill="#0EA5E9"/>
-                <path d="M12 5v2M12 17v2M5 12h2M17 12h2M7.05 7.05l1.42 1.42M15.54 15.54l1.41 1.41M7.05 16.95l1.42-1.41M15.54 8.46l1.41-1.41" stroke="#0EA5E9" strokeWidth="1.4" strokeLinecap="round"/>
-              </svg>
-              <div>
-                <div style={{ fontSize: 10, color: 'rgba(14,165,233,0.9)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1 }}>insight-ai.dev</div>
-                <div style={{ fontSize: 11.5, color: C.text, fontWeight: 600, marginTop: 2 }}>Visit my site →</div>
-              </div>
-              {/* Bubble tail */}
-              <div style={{ position: 'absolute', bottom: -7, left: 14, width: 12, height: 12, background: isDark ? '#1a1a3a' : '#ffffff', border: '1px solid rgba(14,165,233,0.5)', borderTop: 'none', borderRight: 'none', transform: 'rotate(-45deg)', borderRadius: '0 0 0 3px' }} />
-            </motion.a>
-
-            {/* Bubble: LinkedIn — bottom-right */}
-            <motion.a
-              href="https://www.linkedin.com/in/debarunghosh2024/"
-              target="_blank" rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0, x: -10, y: -10 }}
-              animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-              transition={{ delay: 1.5, type: 'spring', stiffness: 260, damping: 18 }}
-              whileHover={{ scale: 1.08, y: -3 }}
-              className="hero-bubble"
-              style={{
-                position: 'absolute', bottom: 40, right: -75,
-                background: isDark ? 'linear-gradient(135deg, #0a1929, #0d2137)' : '#ffffff',
-                border: '1px solid rgba(10,102,194,0.6)',
-                borderRadius: '18px 18px 4px 18px',
-                padding: '10px 14px',
-                textDecoration: 'none', zIndex: 10,
-                boxShadow: isDark ? '0 8px 24px rgba(10,102,194,0.3)' : '0 8px 24px rgba(10,102,194,0.15)',
-                cursor: 'pointer', whiteSpace: 'nowrap',
-              }}
-            >
-              {/* LinkedIn icon */}
-              <svg width="20" height="20" viewBox="0 0 24 24" style={{ flexShrink: 0 }}>
-                <rect width="24" height="24" rx="5" fill="#0A66C2"/>
-                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" fill="white" transform="scale(0.72) translate(1.7, 1.7)"/>
-              </svg>
-              <div>
-                <div style={{ fontSize: 10, color: '#0A66C2', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1 }}>LinkedIn</div>
-                <div style={{ fontSize: 11.5, color: C.text, fontWeight: 600, marginTop: 2 }}>Let's connect →</div>
-              </div>
-              {/* Bubble tail */}
-              <div style={{ position: 'absolute', bottom: -7, right: 14, width: 12, height: 12, background: isDark ? '#0d2137' : '#ffffff', border: '1px solid rgba(10,102,194,0.6)', borderTop: 'none', borderLeft: 'none', transform: 'rotate(45deg)', borderRadius: '0 0 3px 0' }} />
-            </motion.a>
-
-            {/* Name badge */}
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.9 }}
-              className="hero-name-badge"
-              style={{
-                position: 'absolute', bottom: -18, left: '50%',
-                transform: 'translateX(-50%)',
-                background: C.surface, border: `1px solid ${C.border}`,
-                borderRadius: 20, padding: '7px 18px',
-                fontSize: 12.5, fontWeight: 700, color: C.text,
-                whiteSpace: 'nowrap', zIndex: 2,
-                boxShadow: '0 4px 24px rgba(0,0,0,0.5)',
-              }}
-            >
-              BespokeDeploy.in · Web Studio
-            </motion.div>
+              Connect on LinkedIn →
+            </a>
           </motion.div>
 
-          {/* ── Mobile compact link row (replaces absolute bubbles on small screens) ── */}
-          <div className="hero-bubbles-row">
-            <a
-              href="https://debarunghosh.netlify.app/"
-              target="_blank" rel="noopener noreferrer"
-              className="hero-bubble-pill"
-              style={{ borderColor: 'rgba(14,165,233,0.5)', color: '#0EA5E9' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="9" r="4.5" fill="currentColor" opacity="0.8"/>
-                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              My Portfolio
-            </a>
-            <a
-              href="https://sheetalchandel.com/"
-              target="_blank" rel="noopener noreferrer"
-              className="hero-bubble-pill"
-              style={{ borderColor: 'rgba(16,185,129,0.5)', color: '#10B981' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <path d="M12 21c0 0-7-4-7-10 0 0 3.5-3.5 7-3.5s7 3.5 7 3.5c0 6-7 10-7 10z" fill="currentColor" opacity="0.8"/>
-                <line x1="12" y1="21" x2="12" y2="11" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
-              </svg>
-              Sheetal Chandel
-            </a>
-            <a
-              href="https://woundcarebyaxcess.com/"
-              target="_blank" rel="noopener noreferrer"
-              className="hero-bubble-pill"
-              style={{ borderColor: 'rgba(239,68,68,0.5)', color: '#EF4444' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <path d="M11 6h2v5h5v2h-5v5h-2v-5H6v-2h5V6z" fill="currentColor"/>
-              </svg>
-              Wound Care by Axcess
-            </a>
-            <a
-              href="https://www.linkedin.com/in/debarunghosh2024/"
-              target="_blank" rel="noopener noreferrer"
-              className="hero-bubble-pill"
-              style={{ borderColor: 'rgba(10,102,194,0.5)', color: '#0A66C2' }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <rect width="24" height="24" rx="4" fill="#0A66C2"/>
-                <text x="5" y="17" fill="white" fontSize="11" fontWeight="800" fontFamily="Inter,Arial,sans-serif">in</text>
-              </svg>
-              LinkedIn
-            </a>
-          </div>
-
-          </div>{/* end hero-coin-section */}
         </div>
 
-        {/* Scroll indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5, duration: 0.5 }}
-          style={{ position: 'absolute', bottom: 32, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer' }}
-          onClick={() => document.getElementById('usps')?.scrollIntoView({ behavior: 'smooth' })}
-        >
-          <span style={{ fontSize: 12, color: C.muted, letterSpacing: '0.08em' }}>SCROLL</span>
-          <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity }} style={{ color: C.muted, fontSize: 18 }}>↓</motion.div>
-        </motion.div>
+        {/* MSME trust seal — pinned to the hero's corner like a storefront
+            stamp, rather than sitting inline in the text (spins slowly,
+            opens the certificate details on click; see MsmeBadge.jsx). */}
+        <MsmeSeal
+          size={110}
+          className="hero-msme-seal"
+          style={{ position: 'absolute', top: 'clamp(16px, 3vh, 28px)', right: 'clamp(16px, 3vw, 40px)', zIndex: 20 }}
+        />
       </div>
 
-      {/* ── USPs ── */}
-      <div style={{ background: C.surface, borderTop: `1px solid ${C.border}`, borderBottom: `1px solid ${C.border}` }}>
+      {/* ── Marquee ticker strips ──
+           The track is built from exactly TWO halves so translateX(-50%)
+           loops seamlessly (each item — incl. the last one of a half —
+           carries its own trailing marginRight, so both halves are
+           pixel-identical widths, no drift). Each half repeats the base
+           word list enough times (STRIP_REPEAT) to stay wider than any
+           realistic viewport — otherwise on wide screens the halves are
+           narrower than the screen and a blank gap flashes before it loops. */}
+      <div className="strip">
+        <div className="strip-track">
+          <StripHalves words={['PORTFOLIO', 'SMALL WEBSITE', 'PRO WEBSITE', '5–7 DAY DELIVERY', 'FREE HOSTING FOREVER']} />
+        </div>
+      </div>
+      <div className="strip">
+        <div className="strip-track rev">
+          <StripHalves words={['NO SUBSCRIPTIONS', 'NO WATERMARKS', 'NO MONTHLY FEES', '2 FREE REVISIONS', '100% YOURS']} />
+        </div>
+      </div>
+
+      {/* ── TESTIMONIALS ── */}
+      <TestimonialsSection />
+
+      {/* ── USPs — Concept A: numbered, hairline-grid cards touching edge to edge ── */}
+      <div style={{ background: C.bg }}>
         <Section id="usps">
-          <motion.div variants={fadeUp} style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Why choose me</div>
-            <h2 style={{ fontSize: 40, fontWeight: 800, color: C.text, letterSpacing: '-0.02em' }}>What makes this different</h2>
+          <motion.div variants={fadeUp} style={{ marginBottom: 50 }}>
+            <div style={{ fontSize: 13, color: C.accent, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 14 }}>Why BespokeDeploy</div>
+            <h2 style={{ fontFamily: C.fontDisplay, fontSize: 'clamp(28px, 3.6vw, 44px)', fontWeight: 800, color: C.text, letterSpacing: '-0.02em', maxWidth: 620, lineHeight: 1.05 }}>
+              Four reasons this beats a template every time.
+            </h2>
           </motion.div>
-          <div className="usps-grid">
-            {USPS.map((u) => (
-              <motion.div key={u.title} variants={fadeUp} style={{ background: C.bg, border: `1px solid ${C.border}`, borderRadius: 16, padding: '28px 24px' }}>
-                <div style={{ marginBottom: 16 }}>{USP_ICONS[u.id]}</div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: C.text, marginBottom: 8 }}>{u.title}</div>
+          <motion.div
+            variants={fadeUp}
+            style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+              background: C.border, border: `1px solid ${C.border}`, gap: 1,
+            }}
+          >
+            {USPS.map((u, i) => (
+              <div key={u.title} style={{ background: C.surface, padding: '32px 26px' }}>
+                <div style={{ fontFamily: C.fontDisplay, fontSize: 14, fontWeight: 700, color: C.accent, marginBottom: 34 }}>
+                  {String(i + 1).padStart(2, '0')}
+                </div>
+                <div style={{ fontFamily: C.fontDisplay, fontSize: 19, fontWeight: 700, color: C.text, marginBottom: 10, letterSpacing: '-0.01em' }}>{u.title}</div>
                 <div style={{ fontSize: 13.5, color: C.muted, lineHeight: 1.6 }}>{u.desc}</div>
-              </motion.div>
+              </div>
             ))}
-          </div>
+          </motion.div>
         </Section>
       </div>
 
@@ -2166,39 +1916,43 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
       </div>
 
       {/* ── FAQ ── */}
-      <FAQSection />
+      <FAQTeaser />
 
-      {/* ── FOOTER ── */}
-      <footer style={{ padding: '40px 24px', textAlign: 'center', borderTop: `1px solid ${C.border}` }}>
-        <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 8 }}>
-          <span style={{ color: C.accent }}>Bespoke</span><span style={{ color: C.text }}>Deploy</span><span style={{ color: C.accent }}>.</span><span style={{ color: C.text }}>in</span>
+      {/* ── FOOTER — Concept A: black band, giant ghost-text marquee behind the CTA ── */}
+      <footer style={{ background: '#111111', color: '#F5F3EE', padding: '100px 40px 60px', position: 'relative', overflow: 'hidden', zIndex: 1, isolation: 'isolate' }}>
+        <div style={{
+          position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)',
+          whiteSpace: 'nowrap', fontFamily: C.fontDisplay, fontWeight: 800,
+          fontSize: 140, color: 'rgba(245,243,238,0.04)', animation: 'stripScroll 30s linear infinite', zIndex: 0,
+        }}>
+          LET'S BUILD SOMETHING EXTRAORDINARY — LET'S BUILD SOMETHING EXTRAORDINARY —
         </div>
-        <div style={{ fontSize: 13, color: C.muted }}>
-          BespokeDeploy.in · Built with care · India
-        </div>
-        <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginTop: 16, flexWrap: 'wrap' }}>
-          <a
-            href="/about"
-            style={{ fontSize: 12, color: C.muted, textDecoration: 'underline', textUnderlineOffset: 3 }}
-          >About Me</a>
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <h2 style={{ fontFamily: C.fontDisplay, fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 800, letterSpacing: '-0.02em', maxWidth: 640, lineHeight: 1.08, marginBottom: 30 }}>
+            Ready to build something that actually looks bespoke?
+          </h2>
           <button
-            onClick={() => setLegalDoc('privacy')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.muted, textDecoration: 'underline', textUnderlineOffset: 3, padding: 0 }}
-          >Privacy Policy</button>
-          <button
-            onClick={() => setLegalDoc('tnc')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 12, color: C.muted, textDecoration: 'underline', textUnderlineOffset: 3, padding: 0 }}
-          >Terms & Conditions</button>
-        </div>
-        <div style={{ fontSize: 12, color: C.border, marginTop: 12 }}>
-          © 2026 BespokeDeploy.in. All prices in INR.
+            onClick={() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' })}
+            style={{ background: C.accent, color: '#fff', border: 'none', borderRadius: 40, padding: '16px 32px', fontWeight: 700, fontSize: 15, cursor: 'pointer', fontFamily: 'inherit' }}
+          >
+            Start your project →
+          </button>
+
+          <div style={{ marginTop: 80, paddingTop: 28, borderTop: '1px solid rgba(245,243,238,0.15)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 14, fontSize: 12.5, color: 'rgba(245,243,238,0.45)' }}>
+            <span>© 2026 BespokeDeploy.in · All prices in INR</span>
+            <div style={{ display: 'flex', gap: 20 }}>
+              <a href="/about" style={{ color: 'inherit', textDecoration: 'none' }}>About</a>
+              <button onClick={() => setLegalDoc('privacy')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12.5, padding: 0, fontFamily: 'inherit' }}>Privacy Policy</button>
+              <button onClick={() => setLegalDoc('tnc')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12.5, padding: 0, fontFamily: 'inherit' }}>Terms & Conditions</button>
+            </div>
+          </div>
         </div>
       </footer>
 
       {/* ── LEGAL MODALS ── */}
       <AnimatePresence>
         {legalDoc && (
-          <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} isDark={isDark} />
+          <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />
         )}
       </AnimatePresence>
 
@@ -2214,6 +1968,9 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
           />
         )}
       </AnimatePresence>
+
+      {/* ── SITE PREVIEW MODAL ── */}
+      <SitePreviewModal link={previewLink} onClose={() => setPreviewLink(null)} />
     </div>
   );
 }

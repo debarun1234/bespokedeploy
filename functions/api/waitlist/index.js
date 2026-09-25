@@ -47,7 +47,7 @@ export async function onRequestPost({ request, env }) {
   if (is_urgent) {
     const canUrgent = await isUrgentAvailable(env.DB);
     if (!canUrgent) {
-      return err('Urgent requests are fully booked for this week — you can still join the regular waiting list.', 409);
+      return err('Urgent priority is currently taken — you can still join the regular waiting list.', 409);
     }
     urgent = 1;
   }

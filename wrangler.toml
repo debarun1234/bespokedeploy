@@ -23,3 +23,13 @@ database_id   = "f8735a90-d742-4ef8-ba65-2fba164ff18d"
 # RAZORPAY_WEBHOOK_SECRET — from Razorpay dashboard → Webhooks
 # WA_PHONE_NUMBER_ID    — Meta WhatsApp Cloud API phone number ID
 # WA_ACCESS_TOKEN       — Meta WhatsApp Cloud API permanent token
+# WA_OTP_TEMPLATE_NAME  — optional, defaults to "otp_verification". Only used if
+#                         sendWhatsappOtp() in _shared/otp.js is switched back on —
+#                         currently the OTP gate emails the code instead (see below),
+#                         since Meta gates Authentication template creation behind a
+#                         messaging-volume threshold this account hasn't reached yet.
+# RESEND_API_KEY        — Resend API key (also powers phone OTP verification —
+#                         the code is emailed to the customer's address, keyed to
+#                         their phone number; no SMS provider, no DLT registration)
+# RESEND_FROM           — e.g. "BespokeDeploy <noreply@bespokedeploy.in>" (domain
+#                         must be verified in Resend)

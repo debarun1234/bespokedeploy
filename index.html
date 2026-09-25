@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <!-- Inline, before anything else loads: guarantees the very first paint
+         is already dark, so there's no flash of the browser's default white
+         background while the main stylesheet is still being fetched/parsed. -->
+    <style>html, body { background: #0B0B09; }</style>
+
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-WJTM7VP0YZ"></script>
     <script>
@@ -34,7 +39,7 @@
     <meta name="twitter:description" content="Custom websites for small businesses, professionals & students in India. Transparent pricing from ₹{{PRICE_PORTFOLIO}}, free hosting forever, delivered in 5-7 days." />
     <meta name="twitter:image" content="https://bespokedeploy.in/og-image.png" />
 
-    <meta name="theme-color" content="#0EA5E9" />
+    <meta name="theme-color" content="#E8542C" />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16.png" />
@@ -45,6 +50,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet" />
     <!-- Razorpay Checkout SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
@@ -135,11 +141,6 @@
           "@type": "Question",
           "name": "Can I switch plans or add features after booking?",
           "acceptedAnswer": { "@type": "Answer", "text": "Yes — just let me know during our first conversation and I'll adjust your quote and balance accordingly before any build work starts." }
-        },
-        {
-          "@type": "Question",
-          "name": "Are there only 2 project slots available at a time?",
-          "acceptedAnswer": { "@type": "Answer", "text": "Yes, I only take on 2 projects at once so each one gets proper attention. If both slots are full, you can join the waiting list and I'll notify you the moment one opens." }
         },
         {
           "@type": "Question",

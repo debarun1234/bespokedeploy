@@ -4,6 +4,7 @@ import { notify } from '../_shared/notify.js';
 import { getSettings } from '../_shared/settings.js';
 import { getCapacityStatus, checkInviteBypass } from '../_shared/capacity.js';
 import { getPromoByCode, applyDiscount } from '../_shared/promo.js';
+import { normalizePhone, checkPhoneToken } from '../_shared/otp.js';
 
 export async function onRequestOptions() {
   return new Response(null, { status: 204, headers: cors() });
@@ -47,10 +48,10 @@ async function handleCreateBooking(request, env) {
 
   const {
     razorpay_order_id, razorpay_payment_id, razorpay_signature,
-    plan_id, addon_ids = [],
+    plan_id, addon_ids = [], addon_names = {},
     hosting, customer_name, customer_email, customer_phone,
     customer_city, customer_timing, customer_notes,
-    invite_token, promo_code,
+    invite_token, promo_code, phone_verify_token,
   } = body;
 
   // ── 1. Required fields ──────────────────────────────────────────────────────
@@ -61,6 +62,19 @@ async function handleCreateBooking(request, env) {
   if (!customer_name)      return err('Missing customer_name');
   if (!customer_email)     return err('Missing customer_email');
   if (!customer_phone)     return err('Missing customer_phone');
+
+  // Phone OTP check — informational only at this point. The advance payment
+  // has already been captured by Razorpay by the time this endpoint runs, so
+  // we must never reject a real payment over a verification-token issue;
+  // just flag it for admin visibility if the frontend somehow got here
+  // without a valid token (e.g. OTP feature not configured, or bypassed).
+  try {
+    const phoneE164 = normalizePhone(customer_phone);
+    const phoneOk = phoneE164 && await checkPhoneToken(env, phoneE164, phone_verify_token);
+    if (!phoneOk) console.warn(`[bookings] booking created without a valid phone-verify token for ${customer_phone} (payment ${razorpay_payment_id})`);
+  } catch (e) {
+    console.error('[bookings] phone token check errored, continuing:', e?.message || e);
+  }
 
   // ── 2. Verify Razorpay signature — rejects tampered payments ───────────────
   if (!env.RAZORPAY_KEY_SECRET) {
@@ -105,9 +119,18 @@ async function handleCreateBooking(request, env) {
 
   const planName = { portfolio: 'Portfolio', starter: 'Small Website', pro: 'Pro Website' }[plan_id] || plan_id;
 
+  // Store a human-readable name snapshot too — price is always
+  // server-recalculated above regardless of what's passed here, so accepting
+  // a client-supplied label is cosmetic-only (admin dashboard / receipts),
+  // never a pricing input. Without this, an add-on later renamed or deleted
+  // by the admin would show as a raw id (e.g. "s_payment") on old bookings.
   const addonList = addon_ids
     .filter(id => settings[`addons.${id}.price`])
-    .map(id => ({ id, price: settings[`addons.${id}.price`] }));
+    .map(id => ({
+      id,
+      name: (typeof addon_names?.[id] === 'string' && addon_names[id].trim()) || id,
+      price: settings[`addons.${id}.price`],
+    }));
 
   const bookingData = {
     plan_id,

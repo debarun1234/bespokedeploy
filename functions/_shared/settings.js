@@ -55,6 +55,12 @@ export const DEFAULTS = {
   'hero.tagline':  '🚀 Custom websites · Free hosting · Built in 5-7 days',
   'hero.subtitle': 'Affordable custom websites for small businesses, professionals & students in India — transparent pricing from ₹6,500, zero monthly fees, delivered in 5-7 days.',
   'hero.cta':      'See Plans & Pricing',
+  // Admin-created add-ons — index of ids. Each id's own price/enabled live
+  // under the same 'addons.<id>.price' / 'addons.<id>.enabled' keys as the
+  // built-in add-ons above, so create-order.js / bookings.js need zero
+  // changes to validate them. Only the display metadata (name, desc, which
+  // plan it belongs to) lives under 'custom_addons.<id>.*' below.
+  'custom_addons._ids': [],
 };
 
 // Fetch all settings from D1, merged with defaults
@@ -73,6 +79,12 @@ export async function setSetting(db, key, value) {
   await db.prepare(
     'INSERT INTO site_settings (key, value, updated_at) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value, updated_at=excluded.updated_at'
   ).bind(key, JSON.stringify(value), now).run();
+}
+
+// Remove a single key from D1 (used when deleting an admin-created add-on).
+// Safe no-op if the key was never set (e.g. still on its default).
+export async function deleteSetting(db, key) {
+  await db.prepare('DELETE FROM site_settings WHERE key = ?').bind(key).run();
 }
 
 // Build structured settings object for API response
@@ -98,9 +110,26 @@ export function structureSettings(flat) {
     };
   }
 
+  // Admin-created add-ons — resolved from the _ids index. Any id whose
+  // metadata is somehow missing (shouldn't happen) is skipped rather than
+  // rendered broken.
+  const customIds = Array.isArray(flat['custom_addons._ids']) ? flat['custom_addons._ids'] : [];
+  const custom_addons = customIds
+    .map(id => ({
+      id,
+      plan_id: flat[`custom_addons.${id}.plan_id`],
+      name:    flat[`custom_addons.${id}.name`],
+      desc:    flat[`custom_addons.${id}.desc`] || '',
+      price:   flat[`addons.${id}.price`] ?? 0,
+      enabled: flat[`addons.${id}.enabled`] ?? true,
+      custom:  true,
+    }))
+    .filter(a => a.plan_id && a.name);
+
   return {
     plans,
     addons,
+    custom_addons,
     general: {
       advance_pct_low:   flat['general.advance_pct_low'],
       advance_pct_high:  flat['general.advance_pct_high'],

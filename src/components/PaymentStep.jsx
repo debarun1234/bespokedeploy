@@ -154,6 +154,9 @@ export default function PaymentStep({ plan, addons, hostingChoice, formData, tot
           // Plan info — server recalculates price, never trusts client amounts
           plan_id:         plan.id,
           addon_ids:       addonList.map((a) => a.id),
+          // Display-only labels for the admin/receipt view — price is always
+          // recalculated server-side from live settings regardless of this.
+          addon_names:     Object.fromEntries(addonList.map((a) => [a.id, a.name])),
           hosting:         hostingChoice,
           customer_name:   formData.name,
           customer_email:  formData.email,
@@ -163,6 +166,7 @@ export default function PaymentStep({ plan, addons, hostingChoice, formData, tot
           customer_notes:  formData.notes || '',
           invite_token:    inviteToken || undefined,
           promo_code:      appliedPromo?.code || undefined,
+          phone_verify_token: formData.phone_verify_token || undefined,
         }),
       });
       const data = await res.json();
@@ -368,8 +372,8 @@ export default function PaymentStep({ plan, addons, hostingChoice, formData, tot
           style={{
             background: status === 'loading'
               ? C.surface2
-              : `linear-gradient(135deg, ${plan.color}, ${plan.color}CC)`,
-            color: '#fff', border: 'none', borderRadius: 14,
+              : plan.color,
+            color: '#fff', border: 'none', borderRadius: 40,
             padding: '18px', fontSize: 17, fontWeight: 800,
             cursor: status === 'loading' ? 'not-allowed' : 'pointer',
             width: '100%', fontFamily: 'inherit',

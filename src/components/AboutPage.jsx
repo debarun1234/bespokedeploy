@@ -2,6 +2,7 @@ import { useRef, useEffect } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { C, fadeUp, stagger } from '../theme';
 import ContactBubble from './ContactBubble';
+import MsmeBadge from './MsmeBadge';
 
 const TITLE = 'About Debarun Ghosh — BespokeDeploy.in';
 const DESC  = 'Solo web developer behind BespokeDeploy.in, based in Bengaluru. Full-stack websites built end-to-end, one client at a time.';
@@ -45,7 +46,7 @@ const STACK = [
 ];
 
 const WHY = [
-  { icon: '🎯', title: 'Only 2 projects at a time',   desc: "I cap my workload so every client gets full attention — not split across a dozen accounts." },
+  { icon: '🎯', title: 'Full attention, every project', desc: "I keep my workload deliberately limited so every client gets full attention — not split across a dozen accounts." },
   { icon: '🗣️', title: 'You talk to the builder',      desc: "No account managers, no relay chain. Every call, message, and revision goes through me directly." },
   { icon: '💰', title: 'Transparent, upfront pricing', desc: "The price you see is the price you pay. No hidden fees, no surprise add-ons after the fact." },
   { icon: '⚡', title: 'Free hosting, forever',        desc: "₹0/month on Cloudflare Pages or Netlify — for as long as your site is live." },
@@ -69,6 +70,7 @@ export default function AboutPage() {
           <a href="/" style={{ fontSize: 16, fontWeight: 800, textDecoration: 'none' }}>
             <span style={{ color: C.accent }}>Bespoke</span><span style={{ color: C.text }}>Deploy</span><span style={{ color: C.accent }}>.</span><span style={{ color: C.text }}>in</span>
           </a>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
           <div style={{ position: 'relative' }}>
             <a href="/" style={{ fontSize: 13.5, color: C.muted, textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
               ← Back to home
@@ -91,6 +93,7 @@ export default function AboutPage() {
               }} />
             </motion.span>
           </div>
+          </div>
         </div>
       </div>
 
@@ -110,6 +113,7 @@ export default function AboutPage() {
               📍 Bengaluru, Karnataka, India
             </div>
           </div>
+          <MsmeBadge />
           <p style={{ fontSize: 16.5, color: C.muted, lineHeight: 1.75, maxWidth: 560 }}>
             I design and build custom websites end-to-end — one client at a time, so every project gets the attention it deserves.
           </p>
@@ -128,7 +132,7 @@ export default function AboutPage() {
               What started as building sites for people I knew turned into something I take seriously — not as a side hustle I rush through, but as a craft I care about getting right, even with a full plate. If I'm going to put my name on it, it has to actually work: fast, clean, and built to last past launch day.
             </p>
             <p>
-              That's also why BespokeDeploy caps out at 2 projects at a time. I'd rather do fewer sites well than take on everything and deliver something average. If you work with me, you're working with the person who actually writes the code — not a sales team handing you off to a developer you'll never talk to.
+              That's also why I keep my project load deliberately limited. I'd rather do fewer sites well than take on everything and deliver something average. If you work with me, you're working with the person who actually writes the code — not a sales team handing you off to a developer you'll never talk to.
             </p>
           </div>
         </motion.div>
@@ -207,7 +211,7 @@ export default function AboutPage() {
         }}>
           <h2 style={{ fontSize: 26, fontWeight: 800, color: C.text, marginBottom: 10 }}>Got a project in mind?</h2>
           <p style={{ fontSize: 14.5, color: C.muted, marginBottom: 24, maxWidth: 460, margin: '0 auto 24px' }}>
-            Let's talk about what you need — I only take on 2 projects at a time, so slots go fast.
+            Let's talk about what you need — reach out and I'll get back to you within 24 hours.
           </p>
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
             <a href="/#plans" style={{

@@ -173,7 +173,7 @@ export default function AddonStep({ plan, selectedAddons, hostingChoice, total, 
     : '☁️ Cloudflare Pages';
 
   return (
-    <div style={{ minHeight: '100vh', padding: '40px 24px 80px', maxWidth: 1200, margin: '0 auto' }}>
+    <div style={{ minHeight: '100vh', padding: '52px 24px 80px', maxWidth: 1200, margin: '0 auto' }}>
 
       {/* Header */}
       <motion.div
@@ -358,8 +358,8 @@ export default function AddonStep({ plan, selectedAddons, hostingChoice, total, 
           <button
             onClick={onNext}
             style={{
-              background: `linear-gradient(135deg, ${plan.color}, ${plan.color}CC)`,
-              color: '#fff', border: 'none', borderRadius: 13,
+              background: plan.color,
+              color: '#fff', border: 'none', borderRadius: 40,
               padding: '16px', fontSize: 15, fontWeight: 700,
               cursor: 'pointer', width: '100%', fontFamily: 'inherit',
               boxShadow: `0 6px 24px ${plan.color}30`,

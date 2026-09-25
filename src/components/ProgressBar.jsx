@@ -7,7 +7,7 @@ export default function ProgressBar({ stepIndex, plan, onBack }) {
   return (
     <div style={{
       position: 'sticky', top: 0, zIndex: 200,
-      background: `${C.surface}F0`,
+      background: 'rgba(var(--c-surface-rgb), 0.94)',
       backdropFilter: 'blur(16px)',
       borderBottom: `1px solid ${C.border}`,
       padding: '12px 24px',
@@ -21,7 +21,7 @@ export default function ProgressBar({ stepIndex, plan, onBack }) {
           onClick={onBack}
           style={{
             background: 'transparent', border: `1px solid ${C.border}`,
-            color: C.muted, borderRadius: 8, padding: '6px 14px',
+            color: C.muted, borderRadius: 40, padding: '6px 14px',
             fontSize: 13, cursor: 'pointer', whiteSpace: 'nowrap',
             transition: 'color .2s, border-color .2s',
           }}

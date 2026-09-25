@@ -11,7 +11,16 @@ const CATEGORIES = [
   { id: 'service',  label: 'During service / build' },
   { id: 'delivery', label: 'Post-delivery' },
   { id: 'payment',  label: 'Payment / refund' },
-  { id: 'other',    label: 'Something else' },
+];
+
+// Mandatory gate shown before any other field — this exists specifically to
+// keep unrelated requests (course-project help, general coding questions,
+// anything not about hiring BespokeDeploy) out of the inbox. Only 'build'
+// and 'existing' can actually submit the form.
+const PURPOSES = [
+  { id: 'build',     label: 'Yes — I want a website built', desc: 'New project, a quote, or general questions before booking.' },
+  { id: 'existing',  label: "I'm an existing customer", desc: 'I already have a booking and need help with it.' },
+  { id: 'unrelated', label: "Something else", desc: 'Not about getting a website built by BespokeDeploy.' },
 ];
 
 const inputSt = {
@@ -20,10 +29,82 @@ const inputSt = {
   width: '100%', fontFamily: 'inherit', boxSizing: 'border-box',
 };
 
+// Loose client-side check — the real validation happens server-side in
+// _shared/otp.js's normalizePhone(). Just decides when to show the "Send
+// code" button so we're not firing a WhatsApp message on every keystroke.
+function looksLikePhone(v) {
+  const digits = (v || '').replace(/\D/g, '');
+  return digits.length === 10 || (digits.length === 12 && digits.startsWith('91'));
+}
+
 function ContactOverlay({ onClose }) {
+  const [purpose, setPurpose] = useState(''); // '' | 'build' | 'existing' | 'unrelated'
   const [form, setForm] = useState({ name: '', email: '', phone: '', booking_id: '', category: 'order', message: '' });
   const [status, setStatus] = useState('idle'); // idle | submitting | done | error
   const [errorMsg, setErrorMsg] = useState('');
+
+  // ── Phone OTP verification (code emailed to the address above) — same mechanism as booking checkout ──
+  const [otpStatus, setOtpStatus] = useState('idle'); // idle | sending | sent | verifying | verified
+  const [otpCode, setOtpCode]     = useState('');
+  const [otpError, setOtpError]   = useState('');
+  const [otpRef, setOtpRef]       = useState('');
+  const [verifiedPhone, setVerifiedPhone] = useState('');
+  const [phoneToken, setPhoneToken]       = useState('');
+  const [resendIn, setResendIn]           = useState(0);
+
+  const phoneVerified = otpStatus === 'verified' && verifiedPhone === form.phone.trim();
+  const emailValid = /\S+@\S+\.\S+/.test(form.email.trim());
+
+  // Editing the phone after verifying invalidates it — must re-verify the new number.
+  useEffect(() => {
+    if (verifiedPhone && form.phone.trim() !== verifiedPhone) {
+      setOtpStatus('idle'); setOtpCode(''); setOtpError(''); setOtpRef(''); setPhoneToken(''); setVerifiedPhone('');
+    }
+  }, [form.phone]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!resendIn) return;
+    const t = setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
+
+  const sendOtp = async () => {
+    setOtpError('');
+    setOtpStatus('sending');
+    try {
+      const res = await fetch('/api/otp/send', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone, email: form.email }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Could not send code');
+      setOtpRef(data.otp_ref || '');
+      setOtpStatus('sent');
+      setResendIn(30);
+    } catch (e) {
+      setOtpStatus('idle');
+      setOtpError(e.message);
+    }
+  };
+
+  const verifyOtp = async () => {
+    setOtpError('');
+    setOtpStatus('verifying');
+    try {
+      const res = await fetch('/api/otp/verify', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: form.phone, otp: otpCode, otp_ref: otpRef }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok) throw new Error(data.error || 'Incorrect code');
+      setOtpStatus('verified');
+      setVerifiedPhone(form.phone.trim());
+      setPhoneToken(data.token);
+    } catch (e) {
+      setOtpStatus('sent');
+      setOtpError(e.message);
+    }
+  };
 
   const set = (k) => (e) => setForm((p) => ({ ...p, [k]: e.target.value }));
 
@@ -33,13 +114,17 @@ function ContactOverlay({ onClose }) {
       setErrorMsg('Please fill in your name, email, phone and message.');
       return;
     }
+    if (!phoneVerified) {
+      setErrorMsg('Please verify your phone number before sending.');
+      return;
+    }
     setStatus('submitting');
     setErrorMsg('');
     try {
       const res = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, purpose, phone_verify_token: phoneToken }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
@@ -72,46 +157,156 @@ function ContactOverlay({ onClose }) {
             </button>
           </div>
         ) : (
-          <form onSubmit={submit}>
+          <div>
             <div style={{ fontSize: 12, color: C.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>
               Get in touch
             </div>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text, marginBottom: 6 }}>
-              Report a concern or dispute
+              {purpose ? 'Report a concern or dispute' : 'Before we start...'}
             </div>
-            <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 20 }}>
-              Tell me what's going on and I'll get back to you directly by email within 24 hours.
+            <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6, marginBottom: 18 }}>
+              {purpose
+                ? "Tell me what's going on and I'll get back to you directly by email within 24 hours."
+                : 'This form is only for people looking to get a website built, or existing customers with a question — quick check first:'}
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <input style={inputSt} placeholder="Your full name" value={form.name} onChange={set('name')} required />
-              <input style={inputSt} type="email" placeholder="you@email.com" value={form.email} onChange={set('email')} required />
-              <input style={inputSt} type="tel" placeholder="+91 XXXXX XXXXX" value={form.phone} onChange={set('phone')} required />
-              <input style={inputSt} placeholder="Booking ID (optional)" value={form.booking_id} onChange={set('booking_id')} />
-              <select style={{ ...inputSt, cursor: 'pointer' }} value={form.category} onChange={set('category')}>
-                {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-              </select>
-              <textarea
-                style={{ ...inputSt, resize: 'vertical', minHeight: 90, fontFamily: 'inherit' }}
-                placeholder="Describe your concern in a few sentences..."
-                value={form.message} onChange={set('message')} required
-              />
+
+            {/* ── Mandatory gate — keeps unrelated requests (course help, general
+                 coding questions, anything not about hiring BespokeDeploy) out
+                 of the inbox. Nothing below this appears until answered. ── */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: purpose ? 18 : 0 }}>
+              {PURPOSES.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setPurpose(p.id)}
+                  style={{
+                    textAlign: 'left', width: '100%', cursor: 'pointer', fontFamily: 'inherit',
+                    background: purpose === p.id ? `${C.accent}15` : C.bg,
+                    border: `1px solid ${purpose === p.id ? C.accent : C.border}`,
+                    borderRadius: 10, padding: '10px 14px',
+                  }}
+                >
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: purpose === p.id ? C.accent : C.text }}>{p.label}</div>
+                  <div style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>{p.desc}</div>
+                </button>
+              ))}
             </div>
-            {errorMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: C.red }}>{errorMsg}</div>}
-            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-              <button
-                type="button" onClick={onClose}
-                style={{ flex: '0 0 auto', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 10, padding: '11px 18px', fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}
-              >
-                Cancel
-              </button>
-              <button
-                type="submit" disabled={status === 'submitting'}
-                style={{ flex: 1, background: C.accent, color: '#fff', border: 'none', borderRadius: 10, padding: '11px 18px', fontSize: 14, fontWeight: 700, cursor: status === 'submitting' ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: status === 'submitting' ? 0.6 : 1 }}
-              >
-                {status === 'submitting' ? 'Sending…' : 'Send Message'}
-              </button>
-            </div>
-          </form>
+
+            {purpose === 'unrelated' && (
+              <div style={{ marginTop: 16, padding: '14px 16px', background: `${C.yellow}12`, border: `1px solid ${C.yellow}40`, borderRadius: 10, fontSize: 13, color: C.muted, lineHeight: 1.6 }}>
+                This form is specifically for website-building inquiries and existing BespokeDeploy customers, so I can't help through here — thanks for understanding, and best of luck with what you're working on!
+                <div style={{ marginTop: 12 }}>
+                  <button type="button" onClick={onClose} style={{ background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 10, padding: '9px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit' }}>
+                    Close
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {(purpose === 'build' || purpose === 'existing') && (
+              <form onSubmit={submit}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <input style={inputSt} placeholder="Your full name" value={form.name} onChange={set('name')} required />
+                  <input style={inputSt} type="email" placeholder="you@email.com" value={form.email} onChange={set('email')} required />
+                  <input
+                    style={inputSt} type="tel" placeholder="+91 XXXXX XXXXX"
+                    value={form.phone} onChange={set('phone')} required
+                    readOnly={phoneVerified}
+                  />
+
+                  {looksLikePhone(form.phone) && (
+                    <div style={{ marginTop: -4 }}>
+                      {phoneVerified ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: C.green, fontWeight: 600 }}>
+                          <span>✓ Verified via email</span>
+                          <button
+                            type="button"
+                            onClick={() => { setOtpStatus('idle'); setVerifiedPhone(''); setPhoneToken(''); setOtpCode(''); setOtpRef(''); }}
+                            style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 11.5, textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit' }}
+                          >
+                            change number
+                          </button>
+                        </div>
+                      ) : !emailValid ? (
+                        <div style={{ fontSize: 12.5, color: C.muted }}>Enter your email above to receive a verification code</div>
+                      ) : (otpStatus === 'idle' || otpStatus === 'sending') ? (
+                        <button
+                          type="button"
+                          onClick={sendOtp}
+                          disabled={otpStatus === 'sending'}
+                          style={{
+                            background: 'transparent', border: `1px solid ${C.accent}50`, color: C.accent,
+                            borderRadius: 8, padding: '8px 16px', fontSize: 12.5, fontWeight: 700, cursor: otpStatus === 'sending' ? 'not-allowed' : 'pointer',
+                            fontFamily: 'inherit', opacity: otpStatus === 'sending' ? 0.6 : 1,
+                          }}
+                        >
+                          {otpStatus === 'sending' ? 'Sending code…' : 'Send verification code'}
+                        </button>
+                      ) : (
+                        <div>
+                          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                            <input
+                              value={otpCode}
+                              onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              placeholder="6-digit code"
+                              inputMode="numeric"
+                              style={{ ...inputSt, width: 130, padding: '9px 12px', fontSize: 14 }}
+                            />
+                            <button
+                              type="button" onClick={verifyOtp}
+                              disabled={otpStatus === 'verifying' || otpCode.length < 4}
+                              style={{
+                                background: C.accent, color: '#fff', border: 'none', borderRadius: 8,
+                                padding: '9px 16px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+                                opacity: (otpStatus === 'verifying' || otpCode.length < 4) ? 0.6 : 1,
+                              }}
+                            >
+                              {otpStatus === 'verifying' ? 'Checking…' : 'Verify'}
+                            </button>
+                            <button
+                              type="button" onClick={sendOtp} disabled={resendIn > 0}
+                              style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 12, textDecoration: resendIn > 0 ? 'none' : 'underline', cursor: resendIn > 0 ? 'default' : 'pointer', fontFamily: 'inherit' }}
+                            >
+                              {resendIn > 0 ? `Resend in ${resendIn}s` : 'Resend code'}
+                            </button>
+                          </div>
+                          <div style={{ fontSize: 11.5, color: C.muted, marginTop: 6 }}>Sent to {form.email} — check your inbox (and spam folder)</div>
+                        </div>
+                      )}
+                      {otpError && <div style={{ fontSize: 12, color: C.red, marginTop: 6 }}>{otpError}</div>}
+                    </div>
+                  )}
+
+                  {purpose === 'existing' && (
+                    <input style={inputSt} placeholder="Booking ID (optional)" value={form.booking_id} onChange={set('booking_id')} />
+                  )}
+                  <select style={{ ...inputSt, cursor: 'pointer' }} value={form.category} onChange={set('category')}>
+                    {CATEGORIES.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
+                  </select>
+                  <textarea
+                    style={{ ...inputSt, resize: 'vertical', minHeight: 90, fontFamily: 'inherit' }}
+                    placeholder="Describe your concern in a few sentences..."
+                    value={form.message} onChange={set('message')} required
+                  />
+                </div>
+                {errorMsg && <div style={{ marginTop: 12, fontSize: 12.5, color: C.red }}>{errorMsg}</div>}
+                <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+                  <button
+                    type="button" onClick={onClose}
+                    style={{ flex: '0 0 auto', background: 'transparent', border: `1px solid ${C.border}`, color: C.muted, borderRadius: 10, padding: '11px 18px', fontSize: 13.5, cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit" disabled={status === 'submitting' || !phoneVerified}
+                    style={{ flex: 1, background: C.accent, color: '#fff', border: 'none', borderRadius: 10, padding: '11px 18px', fontSize: 14, fontWeight: 700, cursor: (status === 'submitting' || !phoneVerified) ? 'not-allowed' : 'pointer', fontFamily: 'inherit', opacity: (status === 'submitting' || !phoneVerified) ? 0.6 : 1 }}
+                  >
+                    {status === 'submitting' ? 'Sending…' : phoneVerified ? 'Send Message' : 'Verify phone to continue'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
         )}
       </motion.div>
     </div>
@@ -139,7 +334,7 @@ export default function ContactBubble() {
             transition={{ duration: 0.25 }}
             onClick={() => setOpen(true)}
             style={{
-              position: 'fixed', right: 88, bottom: 34, zIndex: 999,
+              position: 'fixed', right: 88, bottom: 102, zIndex: 1500,
               display: 'flex', alignItems: 'center', gap: 8,
               background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24,
               padding: '10px 14px', cursor: 'pointer', whiteSpace: 'nowrap',
@@ -176,7 +371,7 @@ export default function ContactBubble() {
         whileTap={{ scale: 0.94 }}
         transition={{ delay: 0.6, duration: 0.3, boxShadow: { duration: 1.8, repeat: Infinity, ease: 'easeInOut' } }}
         style={{
-          position: 'fixed', right: 22, bottom: 22, zIndex: 999,
+          position: 'fixed', right: 22, bottom: 90, zIndex: 1500,
           width: 56, height: 56, borderRadius: '50%',
           background: C.accent, border: 'none', cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center',

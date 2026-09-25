@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { C, fmt } from '../theme';
 
 // ─── Confetti (same as SuccessStep) ────────────────────────
-const COLORS = ['#0EA5E9', '#10B981', '#EC4899', '#F59E0B', '#38BDF8'];
+const COLORS = ['#E8542C', '#10B981', '#EC4899', '#FFD23F', '#F0714A'];
 
 function Confetti() {
   return (
@@ -41,14 +41,14 @@ function generateFinalPDF({ bookingId, planName, total, balance, name }) {
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #fff; color: #0F172A; padding: 48px 40px; max-width: 680px; margin: 0 auto; }
     .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 36px; padding-bottom: 24px; border-bottom: 2px solid #0F172A; }
     .brand { font-size: 22px; font-weight: 900; }
-    .brand span { color: #0EA5E9; }
+    .brand span { color: #E8542C; }
     .brand-sub { font-size: 11px; color: #94A3B8; margin-top: 3px; letter-spacing: 0.05em; text-transform: uppercase; }
     .receipt-label h1 { font-size: 28px; font-weight: 900; text-align: right; }
     .receipt-label .sub { font-size: 12px; color: #10B981; font-weight: 700; text-align: right; margin-top: 4px; }
     .receipt-label .date { font-size: 12px; color: #64748B; text-align: right; margin-top: 2px; }
     .booking-id { background: #F8FAFC; border: 1px solid #E2E8F0; border-radius: 10px; padding: 14px 18px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; }
     .booking-id-label { font-size: 11px; color: #94A3B8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; }
-    .booking-id-value { font-size: 20px; font-weight: 800; color: #0EA5E9; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
+    .booking-id-value { font-size: 20px; font-weight: 800; color: #E8542C; font-family: 'Courier New', monospace; letter-spacing: 0.04em; }
     .status-badge { background: #DCFCE7; color: #15803D; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 20px; }
     .section-title { font-size: 10px; font-weight: 700; color: #94A3B8; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px; }
     table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
@@ -270,7 +270,7 @@ export default function FinalPaymentSuccess({ bookingId, planName, total, balanc
               onClick={() => window.location.href = '/'}
               style={{
                 flex: 1, background: `linear-gradient(135deg, ${C.green}, #34D399)`,
-                border: 'none', color: '#fff', borderRadius: 12,
+                border: 'none', color: '#fff', borderRadius: 40,
                 padding: '13px', fontSize: 14, fontWeight: 700,
                 cursor: 'pointer', fontFamily: 'inherit',
               }}

@@ -11,7 +11,7 @@ const ADMIN_EMAIL = 'debarun.ghosh.2024@gmail.com';
 function fmt(n) { return Number(n).toLocaleString('en-IN'); }
 
 // ── Resend REST API ───────────────────────────────────────────────────────────
-async function sendEmail(env, { to, subject, html, replyTo, attachments }) {
+export async function sendEmail(env, { to, subject, html, replyTo, attachments }) {
   const apiKey = env.RESEND_API_KEY;
   if (!apiKey) { throw new Error('RESEND_API_KEY not set in env'); }
 
@@ -478,7 +478,7 @@ function buildContactCustomerEmail({ id, customer_name: name, category }) {
   `, { accentColor: '#2563EB', preheader: `I've received your message — Reference ${id}` });
 }
 
-function buildContactAdminEmail({ id, customer_name: name, customer_email: email, customer_phone: phone, booking_id, category, message }) {
+function buildContactAdminEmail({ id, customer_name: name, customer_email: email, customer_phone: phone, booking_id, category, purpose, message }) {
   return wrap(`
     <div class="hero">
       <div class="badge" style="background:#FEF2F2;color:#B91C1C;border-color:#FECACA">⚠️ New Contact Submission</div>
@@ -490,6 +490,8 @@ function buildContactAdminEmail({ id, customer_name: name, customer_email: email
         <div class="bid-left"><div class="bid-label">Reference ID</div><div class="bid-value" style="color:#F87171">${id}</div></div>
         <div class="bid-right" style="font-size:13px;color:rgba(255,255,255,0.5)">${category}</div>
       </div>
+
+      ${purpose ? `<div class="alert-blue" style="margin-top:16px">🔎 <strong>${purpose}</strong> — passed the genuine-inquiry gate before this email was sent.</div>` : ''}
 
       <hr class="divider">
       <div class="section-label">Customer Details</div>
@@ -572,6 +574,37 @@ export async function notifyCertificate(env, { customer_email, client_name, webs
     subject: `🎓 Your Ownership Certificate — ${website_name} | BespokeDeploy`,
     html: buildCertificateEmail({ client_name, website_name, website_url, certificate_id }),
     attachments: [{ filename: `${certificate_id}.pdf`, content: pdf_base64 }],
+  });
+}
+
+// ── OTP verification email ────────────────────────────────────────────────────
+function buildOtpEmail(otp) {
+  return wrap(`
+    <div class="hero">
+      <div class="badge">🔐 Verification Code</div>
+      <h1>Your verification code</h1>
+      <p>Enter this code to verify your details. It expires in 5 minutes.</p>
+    </div>
+    <div class="body">
+      <div class="bid-banner">
+        <div class="bid-left">
+          <div class="bid-label">Your Code</div>
+          <div class="bid-value" style="font-size:28px;letter-spacing:0.2em">${otp}</div>
+        </div>
+        <div class="bid-right">🔐</div>
+      </div>
+      <div class="alert-blue">
+        Didn't request this? You can safely ignore this email — no account or booking was affected.
+      </div>
+    </div>
+  `, { preheader: `Your verification code is ${otp}` });
+}
+
+export async function notifyOtp(env, email, otp) {
+  await sendEmail(env, {
+    to: email,
+    subject: `🔐 Your verification code: ${otp} | BespokeDeploy`,
+    html: buildOtpEmail(otp),
   });
 }
 

@@ -53,8 +53,8 @@ export const PLANS = [
     description: 'Ideal for tutors, doctors, dieticians, parlours, yoga teachers, and home entrepreneurs ready to grow online.',
     price:       12000,
     icon:        '🔹',
-    color:       '#0EA5E9',
-    colorLight:  'rgba(14,165,233,0.1)',
+    color:       '#E8542C',
+    colorLight:  'rgba(232,84,44,0.1)',
     highlight:   true,
     badge:       'Most Popular',
     delivery:    '5–7 working days',
@@ -90,6 +90,7 @@ export const PLANS = [
     ],
     addons: [
       { id: 's_payment',    name: 'Payment Gateway',         desc: 'Razorpay / UPI / cards — collect payments directly on your site', price: 2000 },
+      { id: 's_catalog',    name: 'Menu / Product Catalog',  desc: 'List items with photos & prices — built for cloud kitchens, home bakers & small home shops', price: 1000 },
       { id: 's_blog',       name: 'Blog Setup',              desc: 'Post articles, tips and updates for your audience',    price: 1200 },
       { id: 's_gallery',    name: 'Photo Gallery',           desc: 'Zoomable image gallery with lightbox viewer',          price: 600  },
       { id: 's_booking',    name: 'Appointment Booking',     desc: 'Calendar-based slot booking for your clients',         price: 2000 },
@@ -106,8 +107,8 @@ export const PLANS = [
   {
     id:          'pro',
     name:        'Pro Website',
-    tagline:     'Established businesses',
-    description: 'For serious professionals and businesses that want a full-featured, polished, and high-performing website.',
+    tagline:     'Businesses ready to sell online',
+    description: 'For established businesses that need to accept payments, showcase their full catalog of work, and rank higher in search — built to grow, not just exist online.',
     price:       22000,
     icon:        '🔸',
     color:       '#EC4899',
@@ -116,12 +117,14 @@ export const PLANS = [
     badge:       'Best Value',
     delivery:    '7–10 working days',
     inheritsFrom: 'Small Website',
-    // What this plan adds over Small — shown on the plan card
+    // What this plan adds over Small — shown on the plan card. Led with the
+    // payment gateway since "ready to get paid online" is Pro's real reason
+    // to exist over Small — not just "more pages."
     extras: [
-      'Portfolio / Gallery page',
+      'Online Payment Gateway — Razorpay / UPI / cards, ready to sell or collect payments',
+      'Product / Work Gallery page — showcase your full catalog or portfolio of work',
       'Full Testimonials page',
-      'Blog setup',
-      'Online Payment Gateway — Razorpay / UPI / cards',
+      'Blog setup — for SEO & content marketing',
       'Google Business Profile setup',
       'Advanced speed tuning — PageSpeed score 90+',
       'Schema markup — rich results in Google Search',
@@ -129,13 +132,13 @@ export const PLANS = [
     // Full list for AddonStep
     included: [
       'Home, About, Services, Contact pages',
-      'Portfolio / Gallery page',
+      'Online Payment Gateway — Razorpay / UPI / cards',
+      'Product / Work Gallery page',
       'Full Testimonials page',
       'Blog setup',
       'Pricing / Packages page',
       'Contact form + WhatsApp Business',
       'Google Maps embed',
-      'Online Payment Gateway — Razorpay / UPI / cards',
       'Google Business Profile setup',
       'Social media links',
       'Advanced SEO + schema markup + Google Analytics',

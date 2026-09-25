@@ -4,6 +4,7 @@ import {
   LayoutDashboard, ClipboardList, Gem, Zap, PenLine, ShieldCheck,
   ExternalLink, LogOut, ChevronRight, RefreshCw, Menu, X, Mail, Users, Star, Megaphone,
 } from 'lucide-react';
+import { C } from '../theme';
 // Certificate PDF builder (jsPDF) is lazy-loaded on demand inside
 // CertificateModal — it pulls in a heavy dependency tree that customer-facing
 // pages should never have to download just because the admin panel exists.
@@ -33,7 +34,7 @@ async function apiFetch(path, opts = {}) {
 // ─── Status config ─────────────────────────────────────────
 const STATUS = {
   new:              { label: 'New',              color: '#F59E0B', bg: 'rgba(245,158,11,0.12)',  dot: '#F59E0B' },
-  contacting:       { label: 'Contacting',       color: '#0EA5E9', bg: 'rgba(14,165,233,0.1)',   dot: '#0EA5E9' },
+  contacting:       { label: 'Contacting',       color: C.accent,  bg: 'rgba(232,84,44,0.1)',    dot: C.accent },
   in_progress:      { label: 'In Progress',      color: '#8B5CF6', bg: 'rgba(139,92,246,0.1)',   dot: '#8B5CF6' },
   awaiting_payment: { label: 'Awaiting Payment', color: '#EC4899', bg: 'rgba(236,72,153,0.1)',   dot: '#EC4899' },
   review:           { label: 'Review',           color: '#10B981', bg: 'rgba(16,185,129,0.1)',   dot: '#10B981' },
@@ -42,28 +43,33 @@ const STATUS = {
 };
 const TABS = ['all', 'new', 'contacting', 'in_progress', 'awaiting_payment', 'review', 'complete', 'cancelled'];
 
-// ─── Design tokens (POSHAN-matched) ────────────────────────
+// ─── Design tokens — matched to the main site's brand (src/theme.js) ───────
+// Was its own standalone blue/violet dashboard palette; now pulls from the
+// same warm near-black bg, burnt-orange accent and cream text the rest of
+// BespokeDeploy.in uses, so the admin panel doesn't look like a bolted-on
+// third-party tool.
 const T = {
-  bg:      '#0F1117',
-  sidebar: '#161920',
-  card:    '#161920',
-  border:  'rgba(255,255,255,0.07)',
-  divider: 'rgba(255,255,255,0.06)',
-  text:    'rgba(255,255,255,0.92)',
-  muted:   'rgba(255,255,255,0.35)',
-  dim:     'rgba(255,255,255,0.55)',
-  accent:  '#0EA5E9',
-  green:   '#10B981',
-  red:     '#EF4444',
-  yellow:  '#F59E0B',
-  violet:  '#8B5CF6',
-  input:   '#0F1117',
+  bg:      C.bg,           // var(--c-bg) — #0B0B09
+  sidebar: C.surface,      // var(--c-surface) — #16150F
+  card:    C.surface,
+  border:  C.borderFaint,  // subtle by default — a dense dashboard can't take
+  divider: C.borderFaint,  // a full opaque orange outline on every row
+  text:    C.text,
+  muted:   C.muted,
+  dim:     C.dim,
+  accent:  C.accent,       // #E8542C — was sky-blue, now the site's burnt orange
+  green:   C.green,
+  red:     C.red,
+  yellow:  C.yellow,
+  violet:  '#C4699A',      // warm plum — keeps a second accent for variety
+                           // without reintroducing a cold blue/purple note
+  input:   C.bg,
 };
 
 // ─── Nav ───────────────────────────────────────────────────
 const NAV = [
   { id: 'dashboard', label: 'Dashboard',       Icon: LayoutDashboard, color: '#8B5CF6' },
-  { id: 'bookings',  label: 'Bookings',        Icon: ClipboardList,   color: '#0EA5E9' },
+  { id: 'bookings',  label: 'Bookings',        Icon: ClipboardList,   color: C.accent },
   { id: 'capacity',  label: 'Capacity',        Icon: Users,           color: '#F59E0B' },
   { id: 'feedback',  label: 'Feedback',        Icon: Star,            color: '#F59E0B' },
   { id: 'promos',    label: 'Promotions',      Icon: Megaphone,       color: '#8B5CF6' },
@@ -75,8 +81,14 @@ const NAV = [
 ];
 
 // ─── Shared UI helpers ──────────────────────────────────────
+// The site's own primary CTAs use a subtle gradient (theme.js's btn()) rather
+// than a flat fill — carry that over specifically for the brand-accent
+// button so it reads as the same button family as the marketing site.
+// Every other color (green/red/yellow/violet) stays flat, which is the right
+// call for a dense dashboard full of small status-colored actions.
 const solidBtn = (bg, extra = {}) => ({
-  background: bg, color: '#fff', border: 'none', borderRadius: 8,
+  background: bg === T.accent ? `linear-gradient(135deg, ${bg}, ${bg}CC)` : bg,
+  color: '#fff', border: 'none', borderRadius: 8,
   padding: '8px 18px', fontSize: 12.5, fontWeight: 700, cursor: 'pointer',
   transition: 'opacity .15s', whiteSpace: 'nowrap', fontFamily: 'inherit',
   display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -111,7 +123,7 @@ function MetricCard({ label, value, sub, color }) {
   return (
     <div style={{ ...card, padding: '20px 24px', flex: 1, minWidth: 160 }}>
       <div style={{ fontSize: 11, color: T.muted, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 600 }}>{label}</div>
-      <div style={{ fontSize: 28, fontWeight: 900, color: color || T.accent, letterSpacing: '-0.02em' }}>{value}</div>
+      <div style={{ fontSize: 28, fontWeight: 900, color: color || T.accent, letterSpacing: '-0.02em', fontFamily: C.fontDisplay }}>{value}</div>
       {sub && <div style={{ fontSize: 12, color: T.muted, marginTop: 4 }}>{sub}</div>}
     </div>
   );
@@ -437,9 +449,10 @@ function BookingCard({ booking, onAction, loading, onToast }) {
 }
 
 // ─── Settings helpers ───────────────────────────────────────
+// Matched to the actual per-plan colors used on the live site (src/data/plans.js).
 const PLAN_META = [
   { id: 'portfolio', name: 'Portfolio',     color: '#10B981' },
-  { id: 'starter',   name: 'Small Website', color: '#0EA5E9' },
+  { id: 'starter',   name: 'Small Website', color: C.accent },
   { id: 'pro',       name: 'Pro Website',   color: '#EC4899' },
 ];
 
@@ -666,12 +679,62 @@ function PlansSettings({ onToast }) {
 }
 
 // ─── Add-ons ────────────────────────────────────────────────
+// Maps the admin panel's plan-group labels to the plan_id used by
+// custom-addon records (portfolio/starter/pro) and by /api/admin/custom-addons.
+const GROUP_PLAN_ID = { 'Portfolio': 'portfolio', 'Small Website': 'starter', 'Pro': 'pro' };
+const BLANK_NEW_ADDON = { name: '', desc: '', price: '' };
+
+function NewAddonForm({ onCreate, creating, onCancel }) {
+  const [form, setForm] = useState(BLANK_NEW_ADDON);
+  const setField = (k, v) => setForm(f => ({ ...f, [k]: v }));
+  const valid = form.name.trim() && Number(form.price) > 0;
+
+  return (
+    <div style={{ ...card, padding: '14px 18px', border: `1px solid ${T.accent}40`, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <input
+        placeholder="Add-on name (e.g. Custom Favicon)"
+        value={form.name} onChange={e => setField('name', e.target.value)}
+        style={{ ...inpStyle, width: '100%' }}
+      />
+      <input
+        placeholder="Short description shown to customers"
+        value={form.desc} onChange={e => setField('desc', e.target.value)}
+        style={{ ...inpStyle, width: '100%' }}
+      />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'space-between', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 12, color: T.muted }}>₹</span>
+          <Inp type="number" value={form.price} onChange={v => setField('price', v)} />
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={onCancel} style={ghostBtn(T.muted, { fontSize: 11.5, padding: '6px 14px' })}>Cancel</button>
+          <button
+            onClick={() => onCreate(form)}
+            disabled={creating || !valid}
+            style={solidBtn(T.accent, { fontSize: 11.5, padding: '6px 16px', opacity: !valid ? 0.5 : 1 })}
+          >
+            {creating ? 'Adding…' : 'Add Add-on'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AddonsSettings({ onToast }) {
   const [settings, setSettings] = useState(null);
   const [dirty,    setDirty]    = useState({});
   const [saving,   setSaving]   = useState(false);
+  const [addingTo, setAddingTo] = useState(null);   // group label currently showing the "new add-on" form
+  const [creating, setCreating] = useState(false);
+  const [busyId,   setBusyId]   = useState(null);   // custom addon id currently being deleted
 
-  useEffect(() => { apiFetch('/admin/settings').then(s => { if (!s?.error) setSettings(s); }); }, []);
+  const load = useCallback(async () => {
+    const s = await apiFetch('/admin/settings');
+    if (!s?.error) setSettings(s);
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
 
   const update = (key, value) => {
     setDirty(d => ({ ...d, [key]: value }));
@@ -693,33 +756,93 @@ function AddonsSettings({ onToast }) {
     else onToast(res.error || 'Save failed', false);
   };
 
+  const createAddon = async (group, form) => {
+    setCreating(true);
+    const res = await apiFetch('/admin/custom-addons', {
+      method: 'POST',
+      body: { plan_id: GROUP_PLAN_ID[group], name: form.name, desc: form.desc, price: Number(form.price) },
+    });
+    setCreating(false);
+    if (!res?.error) { onToast('Add-on created'); setAddingTo(null); load(); }
+    else onToast(res.error || 'Failed', false);
+  };
+
+  const deleteAddon = async (id) => {
+    setBusyId(id);
+    const res = await apiFetch(`/admin/custom-addons/${id}`, { method: 'DELETE' });
+    setBusyId(null);
+    if (!res?.error) {
+      onToast('Add-on deleted');
+      // Drop any unsaved price/enabled edits for the id we just removed.
+      setDirty(d => Object.fromEntries(Object.entries(d).filter(([k]) => !k.startsWith(`addons.${id}.`))));
+      load();
+    } else onToast(res.error || 'Failed', false);
+  };
+
   if (!settings) return <div style={{ color: T.muted, padding: 40, textAlign: 'center' }}>Loading…</div>;
 
   const dirtyCount = Object.keys(dirty).length;
+  const customAddons = settings.custom_addons || [];
 
   return (
     <div>
-      <SectionTitle title="Add-ons" subtitle="Set prices and visibility for each optional add-on." />
+      <SectionTitle title="Add-ons" subtitle="Set prices and visibility for each optional add-on, or create your own." />
       <SaveBar dirty={dirtyCount} onSave={save} saving={saving} />
 
-      {['Portfolio', 'Small Website', 'Pro'].map(group => (
-        <div key={group} style={{ marginBottom: 28 }}>
-          <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10, padding: '0 4px' }}>{group}</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {ADDON_META.filter(a => a.plan === group).map(a => (
-              <div key={a.id} style={{ ...card, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-                <div style={{ flex: 1, fontSize: 13, color: T.text }}>{a.name}</div>
-                <div style={{ fontSize: 11, color: T.muted, fontFamily: 'monospace' }}>{a.id}</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 12, color: T.muted }}>₹</span>
-                  <Inp type="number" value={settings.addons?.[a.id]?.price} onChange={v => update(`addons.${a.id}.price`, v)} />
+      {['Portfolio', 'Small Website', 'Pro'].map(group => {
+        const groupCustom = customAddons.filter(a => a.plan_id === GROUP_PLAN_ID[group]);
+        return (
+          <div key={group} style={{ marginBottom: 28 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, padding: '0 4px' }}>
+              <div style={{ fontSize: 11, color: T.muted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{group}</div>
+              {addingTo !== group && (
+                <button onClick={() => setAddingTo(group)} style={ghostBtn(T.accent, { fontSize: 11, padding: '4px 10px' })}>+ Add-on</button>
+              )}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {ADDON_META.filter(a => a.plan === group).map(a => (
+                <div key={a.id} style={{ ...card, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                  <div style={{ flex: 1, fontSize: 13, color: T.text }}>{a.name}</div>
+                  <div style={{ fontSize: 11, color: T.muted, fontFamily: 'monospace' }}>{a.id}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 12, color: T.muted }}>₹</span>
+                    <Inp type="number" value={settings.addons?.[a.id]?.price} onChange={v => update(`addons.${a.id}.price`, v)} />
+                  </div>
+                  <Toggle checked={settings.addons?.[a.id]?.enabled ?? true} onChange={v => update(`addons.${a.id}.enabled`, v)} />
                 </div>
-                <Toggle checked={settings.addons?.[a.id]?.enabled ?? true} onChange={v => update(`addons.${a.id}.enabled`, v)} />
-              </div>
-            ))}
+              ))}
+              {groupCustom.map(a => (
+                <div key={a.id} style={{ ...card, padding: '12px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', border: `1px solid ${T.accent}30` }}>
+                  <div style={{ flex: 1, minWidth: 140 }}>
+                    <div style={{ fontSize: 13, color: T.text }}>{a.name}</div>
+                    {a.desc && <div style={{ fontSize: 11.5, color: T.muted, marginTop: 2 }}>{a.desc}</div>}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: T.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Custom</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 12, color: T.muted }}>₹</span>
+                    <Inp type="number" value={settings.addons?.[a.id]?.price} onChange={v => update(`addons.${a.id}.price`, v)} />
+                  </div>
+                  <Toggle checked={settings.addons?.[a.id]?.enabled ?? true} onChange={v => update(`addons.${a.id}.enabled`, v)} />
+                  <button
+                    onClick={() => deleteAddon(a.id)}
+                    disabled={busyId === a.id}
+                    style={ghostBtn(T.red, { fontSize: 11, padding: '5px 12px', opacity: busyId === a.id ? 0.5 : 1 })}
+                  >
+                    {busyId === a.id ? 'Deleting…' : 'Delete'}
+                  </button>
+                </div>
+              ))}
+              {addingTo === group && (
+                <NewAddonForm
+                  creating={creating}
+                  onCancel={() => setAddingTo(null)}
+                  onCreate={(form) => createAddon(group, form)}
+                />
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -729,7 +852,7 @@ const dateLabel = (iso) => iso ? new Date(iso).toLocaleDateString('en-IN', { day
 const dateTimeLabel = (iso) => iso ? new Date(iso).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
 
 function ActiveSlotCard({ booking, onFree, busy }) {
-  const planColor = { portfolio: '#10B981', starter: '#0EA5E9', pro: '#EC4899' }[booking.plan_id] || T.accent;
+  const planColor = { portfolio: '#10B981', starter: C.accent, pro: '#EC4899' }[booking.plan_id] || T.accent;
   return (
     <div style={{ ...card, padding: '14px 18px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap', marginBottom: 8 }}>
       <div style={{ width: 8, height: 8, borderRadius: '50%', background: planColor, flexShrink: 0 }} />
@@ -1603,7 +1726,7 @@ function DashboardSection({ metrics, bookings, loading, onAction, tab, setTab, o
           const s      = STATUS[t];
           return (
             <button key={t} onClick={() => setTab(t)} style={{
-              background: active ? (s?.bg || 'rgba(14,165,233,0.12)') : 'transparent',
+              background: active ? (s?.bg || 'rgba(232,84,44,0.12)') : 'transparent',
               color:      active ? (s?.color || T.accent) : T.muted,
               border:     `1px solid ${active ? (s?.color || T.accent) + '50' : T.border}`,
               borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 600,
@@ -1768,7 +1891,7 @@ export default function AdminPage() {
               <Zap size={20} color={T.accent} />
             </div>
             <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: T.text }}><span style={{ color: T.accent }}>Bespoke</span>Deploy</div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: T.text, fontFamily: C.fontDisplay }}><span style={{ color: T.accent }}>Bespoke</span>Deploy</div>
               <div style={{ fontSize: 11, color: T.muted, marginTop: 1, letterSpacing: '0.04em' }}>Admin Dashboard</div>
             </div>
           </div>
@@ -1830,7 +1953,7 @@ export default function AdminPage() {
               <Zap size={18} color={T.accent} />
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: T.text }}><span style={{ color: T.accent }}>Bespoke</span>Deploy</div>
+              <div style={{ fontSize: 14, fontWeight: 800, color: T.text, fontFamily: C.fontDisplay }}><span style={{ color: T.accent }}>Bespoke</span>Deploy</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3 }}>
                 <span style={{ width: 6, height: 6, borderRadius: '50%', background: T.green, display: 'inline-block', animation: 'pulse 2s infinite' }} />
                 <span style={{ fontSize: 10, color: T.muted, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 500 }}>Admin · {time}</span>
@@ -1855,7 +1978,7 @@ export default function AdminPage() {
                   padding: '10px 12px', borderRadius: 12, border: 'none',
                   cursor: 'pointer', fontFamily: 'inherit', textAlign: 'left',
                   marginBottom: 2, position: 'relative',
-                  background: active ? 'rgba(255,255,255,0.10)' : 'transparent',
+                  background: active ? `${T.accent}1A` : 'transparent',
                   color: active ? T.text : T.muted,
                   fontSize: 13.5, fontWeight: active ? 600 : 400,
                   transition: 'all .15s',
@@ -1868,7 +1991,7 @@ export default function AdminPage() {
                   <span style={{
                     position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)',
                     width: 3, height: 20, borderRadius: '0 3px 3px 0',
-                    background: 'rgba(255,255,255,0.85)',
+                    background: T.accent,
                   }} />
                 )}
                 <Icon size={16} color={active ? T.text : color} strokeWidth={active ? 2.2 : 1.8} />
@@ -1913,7 +2036,10 @@ export default function AdminPage() {
           position: 'sticky', top: 0, zIndex: 20,
           height: 56, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 28px',
-          background: `${T.sidebar}CC`,
+          // NOTE: T.sidebar is now var(--c-surface) — can't suffix a hex alpha
+          // directly onto a var() reference (silently drops the whole
+          // declaration, same bug fixed earlier in Landing/FAQPage/ProgressBar).
+          background: 'rgba(var(--c-surface-rgb), 0.8)',
           borderBottom: `1px solid ${T.divider}`,
           backdropFilter: 'blur(12px)',
         }}>

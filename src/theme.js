@@ -7,15 +7,16 @@ export const C = {
   surface2:    'var(--c-surface2)',
   border:      'var(--c-border)',
   borderFaint: 'var(--c-border-faint)',   // replaces ${C.border}22 patterns
-  accent:      '#0EA5E9',                 // Sky blue — hex for opacity compat
-  accentLt:    'rgba(14,165,233,0.12)',
+  accent:      '#E8542C',                 // Burnt orange — hex for opacity compat
+  accentLt:    'rgba(232,84,44,0.12)',
   pink:        '#EC4899',
   green:       '#10B981',
-  yellow:      '#F59E0B',
+  yellow:      '#FFD23F',
   red:         '#EF4444',
   text:        'var(--c-text)',
   muted:       'var(--c-muted)',
   dim:         'var(--c-dim)',
+  fontDisplay: "'Bricolage Grotesque', sans-serif",
 };
 
 // ─── Shared motion variants ───────────────────────────────
