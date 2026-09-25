@@ -6,7 +6,7 @@
 // set RESEND_FROM=onboarding@resend.dev and RESEND_TO_OVERRIDE=your@email.com
 // for testing (Resend only delivers to the address on file in sandbox mode).
 
-const ADMIN_EMAIL = 'debarun.ghosh.2024@gmail.com';
+const ADMIN_EMAIL = 'contact@bespokedeploy.in';
 
 function fmt(n) { return Number(n).toLocaleString('en-IN'); }
 
@@ -157,7 +157,7 @@ function wrap(body, { accentColor = '#2563EB', preheader = '' } = {}) {
       <div class="footer">
         <p>
           <a href="https://bespokedeploy.in">bespokedeploy.in</a> &nbsp;·&nbsp;
-          <a href="mailto:debarun.ghosh.2024@gmail.com">debarun.ghosh.2024@gmail.com</a>
+          <a href="mailto:contact@bespokedeploy.in">contact@bespokedeploy.in</a>
         </p>
         <div class="divider-footer"></div>
         <p style="font-size:11px;color:#CBD5E1">Questions? Reply to this email or WhatsApp us directly.<br>© 2025 BespokeDeploy. All rights reserved.</p>

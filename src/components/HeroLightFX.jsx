@@ -14,7 +14,7 @@ export const HERO_LIGHT_CONFIG = {
   beamSpread:     0.30,   // half-angle of the cone, radians (~17°) — smaller = tighter beam
   beamIntensity:  1.35,   // overall brightness multiplier — the ray is now beam × smoke, so this needs to carry more
   smokeSpeed:     0.78,   // noise animation speed
-  smokeDensity:   1.3,    // how strongly the ray shows where smoke is present (ray = beam × smoke, so this is the main visibility knob now)
+  smokeDensity:   0.9,    // how strongly the ray shows where smoke is present (ray = beam × smoke, so this is the main visibility knob now)
   particleCount:  5,      // 0–8 drifting dust motes inside the cone
   originPosition: 'bottom-left', // 'bottom-left' | 'bottom-center' | 'bottom-right'
   useCoolTemperature: false,     // false = warm tungsten, true = cool projector-blue
@@ -22,7 +22,13 @@ export const HERO_LIGHT_CONFIG = {
   colorCool: [0.55, 0.78, 1.00],
   dprCap:     1.5,        // device-pixel-ratio cap (perf)
   renderScale: 0.9,       // canvas rendered slightly below CSS size then upscaled (perf; kept high so smoke noise detail isn't blurred away)
-  mobileRenderScale: 0.5,
+  // Was 0.5 — combined with the mobile dprCap of 1 below, that rendered the
+  // whole effect at a genuinely tiny backing resolution (e.g. ~195 device px
+  // wide on a 390px-wide phone). The fbm/value-noise underneath aliases hard
+  // at low sample density, showing up as a visible blocky/checkerboard grid
+  // instead of smooth smoke. Raised for a real fix rather than papering over
+  // it with blur.
+  mobileRenderScale: 0.72,
 };
 
 // ─── Shaders ────────────────────────────────────────────────────────────
@@ -107,16 +113,27 @@ void main() {
   // WCAG's intent is "avoid large, fast motion," not "no motion at all."
   float t = u_time * u_smokeSpeed * (u_reducedMotion > 0.5 ? 0.35 : 1.0);
   vec2 noiseUV = uv * 0.0044;
-  noiseUV += curl(noiseUV * 2.4, t * 0.6) * 0.4;
+  // Smaller-magnitude, higher-frequency warp than before — the previous
+  // version warped at the SAME scale as the base noise, which produced
+  // smooth, evenly-spaced rolling contours (i.e. it read as water waves).
+  // Warping at a finer scale breaks that regularity into more chaotic,
+  // turbulent shapes instead.
+  noiseUV += curl(noiseUV * 4.2, t * 0.6) * 0.22;
   noiseUV += vec2(t * 0.05, -t * 0.11);
   float smokeRaw = fbm(noiseUV);
+  // Fine turbulent detail layered on top, sampled independently at a much
+  // higher frequency — this is what breaks up smooth wave-like contours
+  // into the fine, chaotic wisp texture real smoke has.
+  float detail = fbm(noiseUV * 3.0 + vec2(t * 0.22, -t * 0.17));
+  // Light touch — enough to break up smooth contours into believable wisps,
+  // not so much it prints a bold marble/wood-grain pattern across the sky.
+  smokeRaw = mix(smokeRaw, smokeRaw * detail, 0.28);
   // Gentle-but-visible gamma — feathery wisps, not a flat block.
-  float smokeN = pow(smokeRaw, 1.15);
-  // Push thin/faint noise down toward true zero and let denser wisps read
-  // clearly — this is what makes "no smoke here" actually mean no smoke,
-  // rather than a uniform low-level haze everywhere the cone reaches. A
-  // tighter window than before = a crisper boundary where smoke starts/ends.
-  smokeN = smoothstep(0.24, 0.60, smokeN);
+  float smokeN = pow(smokeRaw, 1.3);
+  // Wide, soft threshold — a gentle fade into visibility rather than a
+  // defined edge, so it reads as hazy air catching light, not a graphic
+  // shape stamped on the background.
+  smokeN = smoothstep(0.16, 0.85, smokeN) * 0.8;
 
   // Cheap edge detection: sample the same fbm a hair's-width away in two
   // directions and take the difference. Where smoke density changes fast
@@ -127,14 +144,15 @@ void main() {
   float ny = fbm(noiseUV + eps.yx);
   float edge = length(vec2(nx - smokeRaw, ny - smokeRaw)) * 9.0;
   edge = clamp(edge, 0.0, 1.0);
-  edge = pow(edge, 1.6);
+  edge = pow(edge, 2.2); // subtler — a soft catch-light, not an outlined edge
 
-  // Smoke only "catches" light inside a slightly wider cone than the core beam —
-  // the classic Tyndall look (smoke visible mainly where it's lit).
-  float smokeCone = 1.0 - smoothstep(u_spread * 1.3, u_spread * 2.7, angle);
+  // Smoke only "catches" light close to the actual beam — pulled back in
+  // from a wider cone that was letting smoke read as visible texture across
+  // most of the frame instead of concentrated where the light is.
+  float smokeCone = 1.0 - smoothstep(u_spread * 0.85, u_spread * 1.6, angle);
   float smokeMask = smokeN * smokeCone;
   // Edges only glow where there's actually smoke nearby to have an edge of.
-  float edgeGlow = edge * smokeCone * smoothstep(0.0, 0.5, smokeN + 0.15);
+  float edgeGlow = edge * smokeCone * smoothstep(0.0, 0.5, smokeN + 0.15) * 0.6;
 
   // Directional ray streaks: noise sampled in a coordinate frame aligned to
   // the beam (stretched long ALONG it, compressed ACROSS it), so gaps in the
@@ -144,14 +162,19 @@ void main() {
   vec2 perp    = toFrag - dir * along;
   float across = dot(perp, perp) > 0.0 ? sign(perp.x * dir.y - perp.y * dir.x) * length(perp) : 0.0;
   vec2 streakUV = vec2(across * 0.012, along * 0.0018) + vec2(t * 0.15, -t * 0.35);
+  // Stronger, higher-frequency turbulence than before — the previous warp
+  // wasn't enough to break the heavy "along" compression (0.0018) from
+  // reading as near-straight, evenly-spaced vertical bands/waves running
+  // the length of the beam.
+  streakUV += curl(streakUV * 5.5, t * 0.5) * 0.55;
   float streakN = fbm(streakUV * vec2(1.0, 0.35));
-  float streaks = pow(streakN, 2.6); // sharp contrast -> crisp, distinct shafts
+  float streaks = pow(streakN, 1.4); // softer contrast — hinted shafts, not hard bands
 
   // The ray itself: beam envelope (cone × falloff × intensity) MULTIPLIED by
   // how much smoke is actually there to scatter it (Tyndall — no smoke, no
   // visible ray) AND by the streak pattern, which is what gives individual
   // rays their defined edges instead of one soft wash.
-  float ray = cone * atten * u_intensity * smokeMask * u_smokeDensity * (0.45 + 0.75 * streaks);
+  float ray = cone * atten * u_intensity * smokeMask * u_smokeDensity * (0.62 + 0.5 * streaks);
   // Rim light along smoke edges caught by the beam — gives wisps a defined,
   // lit boundary instead of a soft uniform blob.
   float rim = cone * atten * u_intensity * edgeGlow * u_smokeDensity * 1.4;
@@ -295,7 +318,7 @@ export default function HeroLightFX({ targetRef, shadowRef, enabled, config }) {
     gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
 
     const scale = isMobile ? cfg.mobileRenderScale : cfg.renderScale;
-    const dprCap = isMobile ? Math.min(cfg.dprCap, 1) : cfg.dprCap;
+    const dprCap = isMobile ? Math.min(cfg.dprCap, 1.5) : cfg.dprCap;
 
     function computeGeometry() {
       const rect = container.getBoundingClientRect();
@@ -368,7 +391,12 @@ export default function HeroLightFX({ targetRef, shadowRef, enabled, config }) {
         const el = overlayRef.current;
         el.style.left = `${targetCss.x}px`;
         el.style.top = `${targetCss.y}px`;
-        el.style.opacity = String(Math.min(0.85, intensityHere * 0.9));
+        // OLED phone screens render bright halos against true black far more
+        // aggressively than an LCD desktop monitor — the same alpha value
+        // reads as a much bigger "glow" bloom. Cap it lower on mobile.
+        const overlayCap = isMobile ? 0.5 : 0.85;
+        const overlayMul = isMobile ? 0.55 : 0.9;
+        el.style.opacity = String(Math.min(overlayCap, intensityHere * overlayMul));
       }
 
       // Cast a directional shadow off the lit headline — light travels from
@@ -393,9 +421,13 @@ export default function HeroLightFX({ targetRef, shadowRef, enabled, config }) {
         // shadow direction) — a tight, bright rim right at the edge, like
         // the beam is actually grazing that side of each letter, so it
         // doesn't read as everything just sitting flatly in front of a glow.
+        // Same OLED-bloom concern as the overlay above — dial the glare (and
+        // the dark cast-shadow below) back on mobile so it doesn't read as
+        // an overblown halo around every letter.
+        const glareScale = isMobile ? 0.6 : 1;
         const glareOffset = 2.5 + amount * 4.5;
         const glareBlur = 0.5 + amount * 2;
-        const glareAlpha = Math.min(1, amount * 1.3);
+        const glareAlpha = Math.min(1, amount * 1.3) * glareScale;
         shadowRef.current.style.filter =
           `drop-shadow(${(-ndx * glareOffset).toFixed(1)}px ${(-ndy * glareOffset).toFixed(1)}px ${glareBlur.toFixed(1)}px rgba(255,225,180,${glareAlpha.toFixed(2)})) ` +
           `drop-shadow(${(-ndx * glareOffset * 1.8).toFixed(1)}px ${(-ndy * glareOffset * 1.8).toFixed(1)}px ${(glareBlur * 3).toFixed(1)}px rgba(255,190,120,${(glareAlpha * 0.6).toFixed(2)})) ` +

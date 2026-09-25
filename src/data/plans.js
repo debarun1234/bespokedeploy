@@ -115,12 +115,16 @@ export const PLANS = [
     colorLight:  'rgba(236,72,153,0.1)',
     highlight:   false,
     badge:       'Best Value',
+    calloutTag:  '🤖 AI Chatbot Included',
     delivery:    '7–10 working days',
     inheritsFrom: 'Small Website',
     // What this plan adds over Small — shown on the plan card. Led with the
     // payment gateway since "ready to get paid online" is Pro's real reason
-    // to exist over Small — not just "more pages."
+    // to exist over Small — not just "more pages." AI Chatbot leads the pack
+    // since it's the flagship reason Pro is "Best Value" — a paid add-on on
+    // every other plan, bundled free here.
     extras: [
+      'AI Chatbot Assistant — trained on your business, answers visitor questions & guides them to the right service, 24/7',
       'Online Payment Gateway — Razorpay / UPI / cards, ready to sell or collect payments',
       'Product / Work Gallery page — showcase your full catalog or portfolio of work',
       'Full Testimonials page',
@@ -132,6 +136,7 @@ export const PLANS = [
     // Full list for AddonStep
     included: [
       'Home, About, Services, Contact pages',
+      'AI Chatbot Assistant — trained on your business, answers visitors 24/7',
       'Online Payment Gateway — Razorpay / UPI / cards',
       'Product / Work Gallery page',
       'Full Testimonials page',
@@ -159,7 +164,6 @@ export const PLANS = [
       { id: 'pro_faq',       name: 'FAQ Page',                 desc: 'Accordion-style frequently asked questions page',           price: 500  },
       { id: 'pro_chat',      name: 'Live Chat Widget',         desc: 'Real-time visitor chat integration',                        price: 500  },
       { id: 'pro_darkmode',  name: 'Dark Mode Toggle',         desc: 'Light / dark mode switch for visitors',                     price: 700  },
-      { id: 'pro_ai',        name: 'AI Assistant',             desc: 'Language model trained on your business — guides customers to the right service or product with smart Q&A', price: 4500 },
     ],
   },
 ];

@@ -43,7 +43,7 @@ export const DEFAULTS = {
   'general.advance_pct_low':  0.2,   // Portfolio plan (< ₹15,000)
   'general.advance_pct_high': 0.3,   // Small Website & Pro (≥ ₹15,000)
   'general.advance_threshold': 15000, // Amount boundary between tiers
-  'general.email':        'debarun.ghosh.2024@gmail.com',
+  'general.email':        'contact@bespokedeploy.in',
   'general.whatsapp':     '',
   // Payment test mode — when true, checkout is a walkthrough only: no Razorpay
   // checkout opens, no order/booking is created, no emails are sent.

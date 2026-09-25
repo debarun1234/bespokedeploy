@@ -103,7 +103,7 @@ function generateFinalPDF({ bookingId, planName, total, balance, name }) {
   </div>
 
   <div class="footer">
-    <strong>BespokeDeploy</strong> · bespokedeploy.in · debarun.ghosh.2024@gmail.com<br>
+    <strong>BespokeDeploy</strong> · bespokedeploy.in · contact@bespokedeploy.in<br>
     Reference: <strong>${bookingId}</strong> · Keep this receipt for your records.
   </div>
 

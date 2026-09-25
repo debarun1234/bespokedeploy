@@ -155,7 +155,7 @@ function generatePDF({ plan, addons, hostingChoice, formData, total, advance, pa
   </div>
 
   <div class="footer">
-    <strong>BespokeDeploy</strong> · bespokedeploy.in · debarun.ghosh.2024@gmail.com<br>
+    <strong>BespokeDeploy</strong> · bespokedeploy.in · contact@bespokedeploy.in<br>
     Keep this receipt as your reference. Questions? Reply to your booking confirmation email.
   </div>
 
@@ -337,7 +337,7 @@ export default function SuccessStep({ plan, addons, hostingChoice, formData, tot
 
           <div style={{ textAlign: 'center', fontSize: 12.5, color: C.muted, marginTop: 20, lineHeight: 1.6 }}>
             A confirmation email was sent to <strong style={{ color: C.text }}>{formData.email}</strong><br />
-            Questions? WhatsApp or email <strong style={{ color: C.text }}>debarun.ghosh.2024@gmail.com</strong>
+            Questions? WhatsApp or email <strong style={{ color: C.text }}>contact@bespokedeploy.in</strong>
           </div>
         </div>
       </div>

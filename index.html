@@ -12,7 +12,13 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-WJTM7VP0YZ');
+      // send_page_view: false — this is a client-routed SPA (React Router),
+      // so the automatic pageview on script load would only ever fire once
+      // for "/" and never again as people move through /book/addons,
+      // /book/details, /book/payment, /book/success, /about, /faq, etc.
+      // App.jsx's route-change tracker sends every page_view manually
+      // instead, including the first one, so nothing double-fires.
+      gtag('config', 'G-WJTM7VP0YZ', { send_page_view: false });
     </script>
 
     <meta charset="UTF-8" />
@@ -81,7 +87,7 @@
           "https://debarunghosh.netlify.app/"
         ]
       },
-      "email": "debarun.ghosh.2024@gmail.com",
+      "email": "contact@bespokedeploy.in",
       "sameAs": [
         "https://www.linkedin.com/in/debarunghosh2024/"
       ],

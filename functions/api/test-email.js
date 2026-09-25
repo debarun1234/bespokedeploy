@@ -25,7 +25,7 @@ export async function onRequestGet({ request, env }) {
     // ── Config ─────────────────────────────────────────────────────────────
     const apiKey = env.RESEND_API_KEY  || null;
     const from   = env.RESEND_FROM     || null;
-    const to     = env.RESEND_TO_OVERRIDE || 'debarun.ghosh.2024@gmail.com';
+    const to     = env.RESEND_TO_OVERRIDE || 'contact@bespokedeploy.in';
 
     if (!apiKey) {
       return resp({

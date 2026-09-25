@@ -73,12 +73,11 @@ export function MsmeModal({ onClose }) {
         </div>
 
         <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.6, marginTop: 18 }}>
-          This is a genuine Udyam registration issued by the Ministry of MSME, Government of India. You're welcome to verify it independently at{' '}
-          <a href="https://udyamregistration.gov.in" target="_blank" rel="noopener noreferrer" style={{ color: C.accent }}>udyamregistration.gov.in</a>.
+          This is a genuine Udyam registration issued by the Ministry of MSME, Government of India. We don't publish the certificate file itself — a scanned government document like this is exactly the kind of thing that gets lifted and reused fraudulently once it's a public download. Verify it directly with the government instead, using the registration number above.
         </p>
 
         <a
-          href="/udyam-registration-certificate.pdf"
+          href="https://udyamregistration.gov.in/Udyam_Verify.aspx"
           target="_blank" rel="noopener noreferrer"
           style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -86,7 +85,7 @@ export function MsmeModal({ onClose }) {
             background: `linear-gradient(135deg, ${C.green}, #0ea56f)`, color: '#fff', fontWeight: 700, fontSize: 13.5,
           }}
         >
-          ⬇ Open Full Certificate (PDF)
+          ↗ Verify on udyamregistration.gov.in
         </a>
       </motion.div>
     </motion.div>

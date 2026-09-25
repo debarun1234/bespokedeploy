@@ -10,6 +10,7 @@ import ProgressBar          from './components/ProgressBar';
 import ContactBubble        from './components/ContactBubble';
 import CustomCursor         from './components/CustomCursor';
 import { BookingProvider, useBooking } from './bookingContext';
+import { trackPageView, trackEvent } from './lib/analytics';
 
 // Admin/About/Feedback are separate routes customers never hit on the main
 // booking flow — lazy-load them so their code (incl. jsPDF via AdminPage's
@@ -18,6 +19,7 @@ const AdminPage    = lazy(() => import('./components/AdminPage'));
 const AboutPage    = lazy(() => import('./components/AboutPage'));
 const FeedbackPage = lazy(() => import('./components/FeedbackPage'));
 const FAQPage      = lazy(() => import('./components/FAQPage'));
+const LegalPage     = lazy(() => import('./components/LegalPage'));
 
 const RouteFallback = () => (
   <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--c-bg)' }}>
@@ -112,6 +114,7 @@ function RootRoute() {
       <Landing
         onSelectPlan={(plan) => {
           dispatch({ type: 'SELECT_PLAN', plan });
+          trackEvent('select_content', { content_type: 'plan', item_id: plan.id, item_name: plan.name, value: plan.price, currency: 'INR' });
           navigate('/book/addons');
         }}
         siteSettings={siteSettings}
@@ -139,7 +142,6 @@ function AddonsRoute() {
         onSetHosting={(choice) => dispatch({ type: 'SET_HOSTING', choice })}
         onNext={() => navigate('/book/details')}
       />
-      <ContactBubble />
     </>
   );
 }
@@ -159,7 +161,6 @@ function DetailsRoute() {
           navigate('/book/payment');
         }}
       />
-      <ContactBubble />
     </>
   );
 }
@@ -182,6 +183,12 @@ function PaymentRoute() {
         demoMode={!!siteSettings?.general?.demo_mode}
         onSuccess={(pid, bid, extra) => {
           dispatch({ type: 'PAYMENT_SUCCESS', paymentId: pid, bookingId: bid, ...extra });
+          trackEvent('purchase', {
+            transaction_id: bid,
+            value: extra?.advance ?? advance,
+            currency: 'INR',
+            items: [{ item_id: state.selectedPlan?.id, item_name: state.selectedPlan?.name, price: extra?.total ?? total }],
+          });
           navigate('/book/success');
         }}
       />
@@ -221,6 +228,12 @@ function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
+    // GA4's automatic pageview (index.html) is disabled via send_page_view:
+    // false — this fires one manually on every route change instead,
+    // including the very first load, so the full booking funnel
+    // (/book/addons → /book/details → /book/payment → /book/success) and
+    // pages like /about, /faq, /privacy, /terms actually show up in Analytics.
+    trackPageView(pathname);
   }, [pathname]);
   return null;
 }
@@ -236,6 +249,8 @@ function AppRoutes() {
       <Route path="/book/final-payment" element={<FinalPaymentRoute />} />
       <Route path="/about"    element={<Suspense fallback={<RouteFallback />}><AboutPage /></Suspense>} />
       <Route path="/faq"      element={<Suspense fallback={<RouteFallback />}><FAQPage /></Suspense>} />
+      <Route path="/privacy"  element={<Suspense fallback={<RouteFallback />}><LegalPage doc="privacy" /></Suspense>} />
+      <Route path="/terms"    element={<Suspense fallback={<RouteFallback />}><LegalPage doc="tnc" /></Suspense>} />
       <Route path="/feedback" element={<Suspense fallback={<RouteFallback />}><FeedbackPage /></Suspense>} />
       <Route path="/admin"    element={<Suspense fallback={<RouteFallback />}><AdminPage /></Suspense>} />
       <Route path="*" element={<Navigate to="/" replace />} />

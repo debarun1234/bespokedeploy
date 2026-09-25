@@ -193,6 +193,18 @@ input, select, textarea, button { font-family: inherit; }
 @media (max-width: 420px) {
   .hero-msme-seal { width: 60px !important; height: 60px !important; }
 }
+
+/* ── Main nav — collapse to a hamburger below ~860px ─────────
+   4 links + a CTA button next to the wordmark has no room on a phone;
+   without this it wraps onto itself (links breaking mid-row) or overflows
+   off-screen to the right, hiding Pricing/FAQ/About/the CTA entirely. */
+.site-nav-mobile-panel { display: none; }
+@media (max-width: 860px) {
+  .site-nav { padding-left: 20px !important; padding-right: 20px !important; }
+  .site-nav-links, .site-nav-cta { display: none !important; }
+  .site-nav-hamburger { display: flex !important; }
+  .site-nav-mobile-panel { display: block; }
+}
 .hero-inner {
   display: flex;
   align-items: center;

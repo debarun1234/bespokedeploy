@@ -315,7 +315,7 @@ function CompareSection() {
                 key={c.key}
                 style={{
                   background: c.me ? C.accent : C.text,
-                  color: '#fff',
+                  color: c.me ? '#fff' : C.bg,
                   fontFamily: C.fontDisplay, fontWeight: 700, fontSize: 13.5,
                   padding: '15px 14px', textAlign: 'center',
                 }}
@@ -389,6 +389,94 @@ function FAQTeaser() {
   );
 }
 
+// ─── AI Chatbot corner stamp ────────────────────────────────
+// A rubber-stamp-style seal (perforated dashed outer ring, curved text on an
+// inner ring, custom chat-bubble mark at center — no emoji, matches the
+// MsmeSeal's visual language). Hovering it reveals a small mocked chat-widget
+// preview so the claim reads as "here's what it looks like," not just a tag.
+function AiChatbotStamp({ color }) {
+  const [hovered, setHovered] = useState(false);
+  const uidRef = useRef(`ai-stamp-ring-${Math.random().toString(36).slice(2)}`);
+  const uid = uidRef.current;
+
+  return (
+    <div
+      style={{ position: 'absolute', top: 18, right: 18, zIndex: 6 }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.7, rotate: -22 }}
+        animate={{ opacity: 1, scale: 1, rotate: -12 }}
+        whileHover={{ scale: 1.08, rotate: -6 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        style={{ position: 'relative', width: 96, height: 96, cursor: 'pointer' }}
+      >
+        <svg viewBox="0 0 100 100" width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+          <defs>
+            <path id={uid} d="M 50,50 m -36,0 a 36,36 0 1,1 72,0 a 36,36 0 1,1 -72,0" />
+          </defs>
+          {/* perforated outer edge — sits clear of the text ring */}
+          <circle cx="50" cy="50" r="48" fill="none" stroke={color} strokeWidth="1.3" strokeDasharray="1.4 3" opacity="0.8" />
+          {/* solid inked disc so white text reads clearly */}
+          <circle cx="50" cy="50" r="44" fill={color} opacity="0.94" />
+          <circle cx="50" cy="50" r="30" fill="none" stroke="#fff" strokeWidth="0.8" opacity="0.5" />
+          <text fill="#fff" fontSize="8.4" fontWeight="800" letterSpacing="1.1">
+            <textPath href={`#${uid}`} startOffset="1%">★ AI CHATBOT ★ INCLUDED ★ </textPath>
+          </text>
+        </svg>
+        <span style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 2C6.48 2 2 5.94 2 10.78c0 2.56 1.28 4.86 3.32 6.46L4 22l4.86-1.9c1 .28 2.06.44 3.14.44 5.52 0 10-3.94 10-8.76S17.52 2 12 2Z"
+              fill="#fff" opacity="0.14" stroke="#fff" strokeWidth="1.4" strokeLinejoin="round"
+            />
+            <circle cx="8.4" cy="10.6" r="1.15" fill="#fff" />
+            <circle cx="12" cy="10.6" r="1.1" fill="#fff" />
+            <circle cx="15.6" cy="10.6" r="1.1" fill="#fff" />
+          </svg>
+        </span>
+      </motion.div>
+
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.94 }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'absolute', top: '100%', right: 0, marginTop: 10,
+              width: 228, borderRadius: 14, overflow: 'hidden',
+              background: '#fff', boxShadow: '0 18px 44px rgba(0,0,0,0.45)',
+              zIndex: 30,
+            }}
+          >
+            <div style={{ background: color, padding: '10px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#fff' }} />
+              <span style={{ color: '#fff', fontSize: 11.5, fontWeight: 700 }}>AI Assistant · Online</span>
+            </div>
+            <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 7, background: '#F6F6F4' }}>
+              <div style={{ alignSelf: 'flex-start', background: '#fff', border: '1px solid #ececec', borderRadius: '10px 10px 10px 2px', padding: '6px 9px', fontSize: 10.5, color: '#333', maxWidth: '85%', lineHeight: 1.4 }}>
+                Hi! Looking for a service?
+              </div>
+              <div style={{ alignSelf: 'flex-end', background: color, color: '#fff', borderRadius: '10px 10px 2px 10px', padding: '6px 9px', fontSize: 10.5, maxWidth: '85%', lineHeight: 1.4 }}>
+                Do you offer home visits?
+              </div>
+              <div style={{ alignSelf: 'flex-start', background: '#fff', border: '1px solid #ececec', borderRadius: '10px 10px 10px 2px', padding: '6px 9px', fontSize: 10.5, color: '#333', maxWidth: '85%', lineHeight: 1.4 }}>
+                Yes — I can book that for you right now →
+              </div>
+            </div>
+            <div style={{ padding: '7px 12px', fontSize: 9.5, color: '#999', textAlign: 'center', borderTop: '1px solid #eee' }}>
+              Example — trained on your site content
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 // ─── Plan Card ────────────────────────────────────────────
 function PlanCard({ plan, onSelect, capacity }) {
   const timelineNote = capacity
@@ -422,6 +510,9 @@ function PlanCard({ plan, onSelect, capacity }) {
           {plan.badge}
         </div>
       )}
+
+      {/* AI stamp — corner seal */}
+      {plan.calloutTag && <AiChatbotStamp color={plan.color} />}
 
       {/* Header */}
       <div style={{ marginBottom: 14 }}>{PLAN_ICONS[plan.id]?.(plan.color)}</div>
@@ -457,12 +548,17 @@ function PlanCard({ plan, onSelect, capacity }) {
                 Everything in {plan.inheritsFrom}, plus:
               </span>
             </div>
-            {plan.extras.map((item, i) => (
+            {plan.extras.slice(0, 6).map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: 9, marginBottom: 9, alignItems: 'flex-start' }}>
                 <span style={{ color: plan.color, fontSize: 13, marginTop: 2, flexShrink: 0 }}>✓</span>
                 <span style={{ fontSize: 13.5, color: plan.highlight ? 'rgba(255,255,255,0.75)' : C.dim, lineHeight: 1.45 }}>{item}</span>
               </div>
             ))}
+            {plan.extras.length > 6 && (
+              <div style={{ fontSize: 12.5, color: plan.highlight ? 'rgba(255,255,255,0.5)' : C.muted, marginTop: 4, paddingLeft: 22 }}>
+                +{plan.extras.length - 6} more included — see full details →
+              </div>
+            )}
           </>
         ) : (
           <>
@@ -1072,187 +1168,6 @@ function Section({ children, id }) {
   );
 }
 
-// ─── Legal Modal ──────────────────────────────────────────
-const LEGAL = {
-  privacy: {
-    title: 'Privacy Policy',
-    effective: 'Effective Date: 2 August 2026',
-    sections: [
-      {
-        heading: '1. Who We Are',
-        body: `BespokeDeploy (bespokedeploy.in) is a sole-proprietorship web-development studio operated by Debarun Ghosh, based in India. We build custom websites for individuals and businesses on a one-time project basis.`,
-      },
-      {
-        heading: '2. Information We Collect',
-        body: `We collect only what is necessary to deliver your project, process payment, and communicate with you:\n\n• Contact details — name, email address, phone number, city\n• Project requirements — brief, design preferences, business information you share with us\n• Booking & waiting-list data — plan selected, notes, and preferred contact timing, if you join our waiting list when project slots are full\n• Technical data — IP address, browser type, device type, and pages visited (collected automatically via Google Analytics for website performance purposes)\n• Payment information — we do not collect or store card numbers, UPI IDs, or banking credentials. All payment transactions are processed directly by Razorpay (a PCI-DSS-compliant payment gateway). We only receive a transaction reference ID to confirm payment status.`,
-      },
-      {
-        heading: '3. How We Use Your Information',
-        body: `Your information is used solely to:\n• Deliver the agreed website project\n• Communicate project updates, clarifications, and delivery timelines\n• Process payments via Razorpay\n• Manage our project capacity and waiting list, and notify you when a slot opens\n• Analyse website traffic in aggregate (via Google Analytics) to improve our service\n\nWe do not use your data for advertising, profiling, or marketing without explicit consent, and we do not sell your data under any circumstances.`,
-      },
-      {
-        heading: '4. Data Sharing',
-        body: `We do not sell, rent, or trade your personal data. Data is shared only with the following service providers, strictly to operate this business:\n\n• Razorpay — for payment processing (governed by Razorpay's own Privacy Policy)\n• Resend — for transactional emails (booking confirmations, status updates, receipts)\n• Google Analytics — for anonymised traffic analytics\n• Cloudflare — for hosting, database infrastructure, and security (this website and your project, if hosted with us)\n• Netlify — as an alternative hosting provider for certain project plans\n\nAll third-party services operate under their own privacy and security frameworks, are industry-standard, reputable providers, and may process or store data on servers located outside India. We select providers that maintain appropriate technical and organisational safeguards, but we do not control and are not responsible for their independent security practices — please refer to each provider's own privacy policy for details.`,
-      },
-      {
-        heading: '5. Data Retention',
-        body: `We retain project-related communications and files for a period of 12 months after project delivery, after which they may be deleted. Waiting-list entries that do not convert into a booking may be retained for up to 12 months to manage future capacity. Payment records and transaction references are retained as required by applicable Indian tax and accounting laws (currently up to 8 years).`,
-      },
-      {
-        heading: '6. Your Rights',
-        body: `You may request access to, correction of, or deletion of personal data we hold about you by emailing debarun.ghosh.2024@gmail.com. We will respond within 30 days. Note that some data (e.g. payment/transaction records) may need to be retained regardless of a deletion request, where required by law.`,
-      },
-      {
-        heading: '7. Cookies',
-        body: `This website uses Google Analytics cookies to understand visitor behaviour in aggregate. No personally identifiable information is tied to these cookies. You may disable cookies in your browser settings at any time.`,
-      },
-      {
-        heading: '8. Children’s Privacy',
-        body: `Our services are intended for individuals aged 18 and above, or businesses engaging us through an authorised adult representative. We do not knowingly collect personal data from children under 18. If you believe a child has provided us with personal data, contact us and we will delete it.`,
-      },
-      {
-        heading: '9. Security & Limitation of Liability',
-        body: `We take reasonable technical measures to protect the data we hold, and rely on the security infrastructure of PCI-DSS-compliant and industry-standard providers listed above. However, no method of electronic storage or transmission is 100% secure. To the maximum extent permitted by law, BespokeDeploy is not liable for unauthorised access, data breaches, or losses arising from circumstances beyond our reasonable control, including failures or breaches at third-party service providers.`,
-      },
-      {
-        heading: '10. Changes to This Policy',
-        body: `We may update this policy periodically. The effective date at the top of this page will reflect the latest revision. Continued use of our website after any change constitutes acceptance of the updated policy.`,
-      },
-      {
-        heading: '11. Contact',
-        body: `For privacy-related queries: debarun.ghosh.2024@gmail.com`,
-      },
-    ],
-  },
-  tnc: {
-    title: 'Terms & Conditions',
-    effective: 'Effective Date: 2 August 2026',
-    sections: [
-      {
-        heading: '1. Acceptance of Terms',
-        body: `By placing an order, making an advance payment, joining our waiting list, or engaging BespokeDeploy (bespokedeploy.in) for any web-development service, you ("the Client") agree to be bound by these Terms & Conditions in full. If you do not agree, do not proceed with any booking or payment.`,
-      },
-      {
-        heading: '2. Services',
-        body: `BespokeDeploy provides custom website design and development services as described in the selected plan (Portfolio, Small Website, or Pro Website). The scope of work is limited to what is agreed in writing (via email or the booking form) prior to commencement.\n\n• Any additional features, pages, or changes requested outside the originally agreed scope will be quoted and billed separately, and work on them will not begin until agreed and, where applicable, paid for.\n• Verbal discussions (calls, WhatsApp voice notes) are for convenience only and are not binding on their own — any change to scope, price, or timeline is valid only once confirmed in writing (email, or written message with an explicit acknowledgement from BespokeDeploy).\n• Delivery timelines shown at booking (e.g. "3–5 working days") are estimates, not guarantees, and are calculated from the point the Client has supplied all required content and feedback. Delays caused by the Client (late content, late feedback, unavailability) extend the timeline accordingly and are not a breach by BespokeDeploy.`,
-      },
-      {
-        heading: '3. Payments',
-        body: `All prices are quoted in Indian Rupees (INR) inclusive of applicable taxes unless stated otherwise.\n\n• An advance payment (20%–30% of total project value) is required to reserve a project slot and begin work. This advance is consideration for reserving that slot and commencing work — not merely a booking fee — and its treatment on cancellation is governed by Section 4 below.\n• The remaining balance is due before the final deliverable, source files, or hosting credentials are handed over. BespokeDeploy is entitled to withhold delivery, staging access, and source files until the full balance is received.\n• Payments are processed via Razorpay. BespokeDeploy does not store your payment credentials. All transactions are subject to Razorpay's Terms of Service.\n• Late payment of the balance (beyond 15 days from the final-payment request) may attract a delay fee of 2% per month on the outstanding amount, and may result in the project being paused or the completed work being taken offline until payment is received.`,
-      },
-      {
-        heading: '4. Refunds & Cancellation',
-        body: `• Advance-stage cancellations: if the Client cancels before final payment has been made (i.e. only the advance has been paid), BespokeDeploy will refund the advance payment in full to the Client's original payment method within 3 business days of the cancellation being confirmed.\n• This advance-stage refund does not apply where the Client has been unresponsive for 14 or more consecutive days and the project is treated as abandoned under Section 8 — in that case the advance is forfeited.\n• Once final payment has been made and/or the final deliverable has been handed over or the project marked complete, payments are non-refundable by default. BespokeDeploy may, at its sole and absolute discretion, agree to refund all or part of a post-final-payment amount — for example by mutual agreement — but this is not an entitlement of the Client. Any such discretionary refund will be net of payment gateway fees and the value of work already completed, confirmed in writing, and processed within 7–14 business days of that written agreement.\n• In the event BespokeDeploy is unable to complete the agreed work for reasons within its control, an amount proportional to the uncompleted portion will be refunded within 3 business days.\n• By making any payment, the Client acknowledges and accepts this policy.`,
-      },
-      {
-        heading: '5. Payment Disputes & Chargebacks',
-        body: `If the Client initiates a chargeback, payment dispute, or reversal through their bank, card network, or Razorpay for any payment where services were rendered, in progress, or a slot was reserved, this is treated as a material breach of these Terms.\n\n• The Client agrees to first raise any billing concern directly with BespokeDeploy in writing, and allow 14 days for it to be resolved, before initiating a chargeback or dispute.\n• Where a chargeback is filed without prior notice, BespokeDeploy reserves the right to immediately suspend or take down any hosted deliverable, revoke access, and pursue the disputed amount plus any bank or gateway penalty fees incurred as a result.\n• An unresolved or bad-faith chargeback may result in the Client being refused future services.`,
-      },
-      {
-        heading: '6. Revisions & Review Phases',
-        body: `Each project includes two (2) free revision rounds, to be requested within 7 days of each delivery milestone.\n\n• Revision requests must be clearly documented in writing (email or written brief).\n• Revisions are limited to adjustments within the original agreed scope; new features or redesigns are out of scope and will be quoted separately.\n• Revision requests raised after the 7-day window, or beyond the two free rounds, will be billed at ₹500–₹1,500 per hour depending on complexity.\n• BespokeDeploy shall not be liable for any issues, errors, or deficiencies identified after the free revision phases have been exhausted or expired.`,
-      },
-      {
-        heading: '7. Ownership & Handover',
-        body: `Full ownership of the delivered website code, design assets, and content created as part of the project transfers to the Client only upon receipt of full and final payment. Until full payment is received, all work product (including any preview, staging link, or draft) remains the sole property of BespokeDeploy, is licensed to the Client for review purposes only, and may not be copied, redeployed, or used commercially.\n\n• BespokeDeploy retains the right to display the completed project in its portfolio unless the Client explicitly requests otherwise in writing before project commencement.\n• Third-party assets (stock images, fonts, plugins) remain subject to their respective licence terms; the Client is responsible for ensuring ongoing compliance with those licences.\n• Hosting accounts, domain names, and third-party service subscriptions initiated by the Client remain the Client's sole responsibility after handover.`,
-      },
-      {
-        heading: '8. Client Responsiveness & Project Abandonment',
-        body: `Timely delivery depends on the Client's participation. If the Client does not respond to a request for content, feedback, or approval for 14 consecutive days, BespokeDeploy may treat the project as paused; if unresponsive for 30 consecutive days, BespokeDeploy may treat the project as abandoned by the Client.\n\n• Where a project is treated as abandoned, the advance payment is forfeited under Section 4, and the reserved project slot is released for other work.\n• The Client may request to resume an abandoned project subject to a new timeline, current pricing, and slot availability.`,
-      },
-      {
-        heading: '9. Limitation of Liability',
-        body: `The website is delivered "as is" upon handover. BespokeDeploy makes no guarantee of specific business outcomes (e.g. search rankings, traffic, leads, or sales) resulting from the website.\n\nAfter the project is handed over and/or the free revision phases are complete, BespokeDeploy shall not be held liable for:\n\n• Loss, corruption, or compromise of website files, databases, or data\n• Downtime, service interruptions, or security breaches on third-party hosting or payment platforms\n• Any inaccuracies, outdated information, or errors in content provided by the Client\n• Loss of business, revenue, profit, or opportunities arising from website unavailability, errors, or third-party service changes\n• Changes made to the website by the Client or any third party after handover\n• Incompatibility with future updates to third-party plugins, APIs, or platforms, unless covered by a separately purchased maintenance agreement\n\nBespokeDeploy's total liability under any and all circumstances, whether in contract, tort, or otherwise, shall not exceed the total amount actually paid by the Client for the specific project in question.`,
-      },
-      {
-        heading: '10. Client Responsibilities',
-        body: `The Client is responsible for:\n• Providing accurate, complete, and timely content (text, images, logos, brand guidelines)\n• Ensuring they have the legal right to use any content supplied to BespokeDeploy\n• Reviewing and approving deliverables within the stipulated revision windows\n• Maintaining hosting accounts, domain renewals, and third-party subscriptions post-handover`,
-      },
-      {
-        heading: '11. Intellectual Property — Content Supplied by Client',
-        body: `The Client warrants that all content, images, trademarks, and materials provided to BespokeDeploy are owned by or properly licensed to the Client, and that their use does not infringe any third-party rights. The Client indemnifies and holds BespokeDeploy harmless against any claim, loss, or cost (including legal fees) arising from such content or from the Client's use of the completed website after handover.`,
-      },
-      {
-        heading: '12. Force Majeure',
-        body: `BespokeDeploy shall not be liable for any delay or failure to perform resulting from causes beyond its reasonable control, including but not limited to internet or power outages, third-party service or API outages (hosting, payment gateway, email delivery), illness, or other unforeseeable events. Affected timelines will be extended by a reasonable period.`,
-      },
-      {
-        heading: '13. Independent Contractor',
-        body: `BespokeDeploy is engaged as an independent contractor. Nothing in these Terms creates an employment, partnership, joint venture, or agency relationship between BespokeDeploy and the Client.`,
-      },
-      {
-        heading: '14. Confidentiality',
-        body: `Both parties agree to keep confidential any non-public business information shared during the project, and to use it solely for the purpose of completing the engagement. This does not restrict BespokeDeploy's right to display the completed, publicly-live website in its portfolio under Section 7.`,
-      },
-      {
-        heading: '15. Governing Law & Dispute Resolution',
-        body: `These Terms are governed by the laws of India.\n\n• In the event of a dispute, both parties agree to first attempt to resolve it through good-faith written negotiation for a period of 14 days.\n• If unresolved, the dispute shall be referred to and finally resolved by arbitration under the Arbitration and Conciliation Act, 1996, with a sole arbitrator, seated in Bengaluru, Karnataka, India, with proceedings conducted in English.\n• Subject to the above, the courts of Bengaluru, Karnataka, India shall have exclusive jurisdiction.`,
-      },
-      {
-        heading: '16. Changes to These Terms',
-        body: `BespokeDeploy reserves the right to update these Terms at any time. The effective date will be updated accordingly. Continued use of our services constitutes acceptance of the revised Terms.`,
-      },
-      {
-        heading: '17. Contact',
-        body: `For any queries regarding these Terms: debarun.ghosh.2024@gmail.com`,
-      },
-    ],
-  },
-};
-
-function LegalModal({ doc, onClose }) {
-  const content = LEGAL[doc];
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
-  return (
-    <div
-      onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 2000, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', padding: '40px 16px', overflowY: 'auto' }}
-    >
-      <motion.div
-        onClick={e => e.stopPropagation()}
-        initial={{ opacity: 0, y: 30, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.97 }}
-        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-        style={{
-          background: '#0D0D1A',
-          border: '1px solid #1E1E40',
-          borderRadius: 20, padding: '40px 48px', maxWidth: 780, width: '100%',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.35)',
-        }}
-      >
-        {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32 }}>
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#F1F0FF', marginBottom: 4 }}>{content.title}</div>
-            <div style={{ fontSize: 12, color: '#6B7280' }}>{content.effective}</div>
-          </div>
-          <button
-            onClick={onClose}
-            style={{ background: 'transparent', border: '1px solid #1E1E40', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', fontSize: 18, color: '#9CA3AF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginLeft: 16 }}
-          >×</button>
-        </div>
-        {/* Body */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-          {content.sections.map((s) => (
-            <div key={s.heading}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#E8542C', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.heading}</div>
-              <div style={{ fontSize: 14, color: '#9CA3AF', lineHeight: 1.8, whiteSpace: 'pre-line' }}>{s.body}</div>
-            </div>
-          ))}
-        </div>
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid #1E1E40', textAlign: 'center', fontSize: 12, color: '#6B7280' }}>
-          © 2026 BespokeDeploy · bespokedeploy.in · debarun.ghosh.2024@gmail.com
-        </div>
-      </motion.div>
-    </div>
-  );
-}
-
 // ─── Capacity banner ────────────────────────────────────────
 function CapacityBanner({ capacity }) {
   if (!capacity) return null;
@@ -1568,7 +1483,7 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
   const heroHeadlineRef = useRef(null); // "make people" line — the light's aim target
   const heroTitleRef = useRef(null); // whole h1 — gets the lit drop-shadow
   const [previewLink, setPreviewLink] = useState(null); // { href, label } | null
-  const [legalDoc, setLegalDoc] = useState(null); // 'privacy' | 'tnc' | null
+  const [navOpen, setNavOpen] = useState(false); // mobile hamburger menu
   const [capacity, setCapacity] = useState(null);
   const [waitlistModal, setWaitlistModal] = useState(null); // { plan, reason } | null
   const [promos, setPromos] = useState([]);
@@ -1600,6 +1515,7 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
+        className="site-nav"
         style={{
           position: 'sticky', top: 0, zIndex: 30,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1610,13 +1526,13 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
         <a href="/" style={{ fontFamily: C.fontDisplay, fontWeight: 800, fontSize: 19, letterSpacing: '-0.01em', color: C.text, textDecoration: 'none' }}>
           BespokeDeploy<span style={{ color: C.accent }}>.</span>
         </a>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 36, fontSize: 14, fontWeight: 600, color: C.muted, transition: 'color 0.3s ease' }}>
+        <div className="site-nav-links" style={{ display: 'flex', alignItems: 'center', gap: 36, fontSize: 14, fontWeight: 600, color: C.muted, transition: 'color 0.3s ease' }}>
           <a href="#usps" onClick={(e) => { e.preventDefault(); document.getElementById('usps')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>Why me</a>
           <a href="#plans" onClick={(e) => { e.preventDefault(); document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }); }} style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>Pricing</a>
           <a href="/faq" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>FAQ</a>
           <a href="/about" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s ease' }} onMouseEnter={(e) => { e.currentTarget.style.color = C.accent; }} onMouseLeave={(e) => { e.currentTarget.style.color = 'inherit'; }}>About</a>
         </div>
-        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="site-nav-cta nav-right" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <button
             onClick={() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' })}
             style={{ background: C.text, color: C.bg, border: 'none', borderRadius: 40, padding: '11px 22px', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}
@@ -1624,7 +1540,74 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
             Start a project →
           </button>
         </div>
+
+        {/* Hamburger — hidden on desktop, shown below the .site-nav-links
+            breakpoint (see index.css) since 4 links + a CTA button doesn't
+            fit next to the wordmark on a phone without wrapping/overflowing. */}
+        <button
+          className="site-nav-hamburger"
+          onClick={() => setNavOpen((o) => !o)}
+          aria-label={navOpen ? 'Close menu' : 'Open menu'}
+          aria-expanded={navOpen}
+          style={{
+            display: 'none', background: 'transparent', border: `1px solid ${C.borderFaint}`, borderRadius: 10,
+            width: 40, height: 40, cursor: 'pointer', color: C.text, alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}
+        >
+          <div style={{ width: 18, height: 13, position: 'relative' }}>
+            <motion.span animate={{ rotate: navOpen ? 45 : 0, y: navOpen ? 5.5 : 0 }} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 1.6, background: C.text, borderRadius: 2 }} />
+            <motion.span animate={{ opacity: navOpen ? 0 : 1 }} style={{ position: 'absolute', top: 5.5, left: 0, width: '100%', height: 1.6, background: C.text, borderRadius: 2 }} />
+            <motion.span animate={{ rotate: navOpen ? -45 : 0, y: navOpen ? -5.5 : 0 }} style={{ position: 'absolute', top: 11, left: 0, width: '100%', height: 1.6, background: C.text, borderRadius: 2 }} />
+          </div>
+        </button>
       </motion.div>
+
+      {/* Mobile nav dropdown — links + CTA stacked, only rendered/shown below
+          the hamburger breakpoint (CSS handles hiding it on desktop too, as
+          a belt-and-suspenders in case JS state lingers across a resize). */}
+      <AnimatePresence>
+        {navOpen && (
+          <motion.div
+            className="site-nav-mobile-panel"
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: 'sticky', top: 61, zIndex: 29, overflow: 'hidden',
+              background: 'rgba(var(--c-bg-rgb), 0.98)', backdropFilter: 'blur(10px)',
+              borderBottom: `1px solid ${C.borderFaint}`,
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', padding: '8px 24px 20px' }}>
+              {[
+                { label: 'Why me', onClick: () => document.getElementById('usps')?.scrollIntoView({ behavior: 'smooth' }) },
+                { label: 'Pricing', onClick: () => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }) },
+                { label: 'FAQ', href: '/faq' },
+                { label: 'About', href: '/about' },
+              ].map((item) => (
+                item.href ? (
+                  <a key={item.label} href={item.href} style={{ padding: '14px 4px', fontSize: 15.5, fontWeight: 600, color: C.text, textDecoration: 'none', borderBottom: `1px solid ${C.borderFaint}` }}>
+                    {item.label}
+                  </a>
+                ) : (
+                  <button
+                    key={item.label}
+                    onClick={() => { item.onClick(); setNavOpen(false); }}
+                    style={{ padding: '14px 4px', fontSize: 15.5, fontWeight: 600, color: C.text, background: 'transparent', border: 'none', borderBottom: `1px solid ${C.borderFaint}`, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit' }}
+                  >
+                    {item.label}
+                  </button>
+                )
+              ))}
+              <button
+                onClick={() => { document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }); setNavOpen(false); }}
+                style={{ marginTop: 16, background: C.text, color: C.bg, border: 'none', borderRadius: 40, padding: '13px 22px', fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+              >
+                Start a project →
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── HERO ── */}
       <div className="hero-root">
@@ -1919,11 +1902,11 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
       <FAQTeaser />
 
       {/* ── FOOTER — Concept A: black band, giant ghost-text marquee behind the CTA ── */}
-      <footer style={{ background: '#111111', color: '#F5F3EE', padding: '100px 40px 60px', position: 'relative', overflow: 'hidden', zIndex: 1, isolation: 'isolate' }}>
+      <footer style={{ background: '#111111', color: '#F5F3EE', padding: 'clamp(56px, 12vw, 100px) clamp(20px, 5vw, 40px) clamp(36px, 6vw, 60px)', position: 'relative', overflow: 'hidden', zIndex: 1, isolation: 'isolate' }}>
         <div style={{
           position: 'absolute', top: '50%', left: 0, transform: 'translateY(-50%)',
           whiteSpace: 'nowrap', fontFamily: C.fontDisplay, fontWeight: 800,
-          fontSize: 140, color: 'rgba(245,243,238,0.04)', animation: 'stripScroll 30s linear infinite', zIndex: 0,
+          fontSize: 'clamp(56px, 14vw, 140px)', color: 'rgba(245,243,238,0.04)', animation: 'stripScroll 30s linear infinite', zIndex: 0,
         }}>
           LET'S BUILD SOMETHING EXTRAORDINARY — LET'S BUILD SOMETHING EXTRAORDINARY —
         </div>
@@ -1942,19 +1925,12 @@ export default function Landing({ onSelectPlan, siteSettings, inviteInfo }) {
             <span>© 2026 BespokeDeploy.in · All prices in INR</span>
             <div style={{ display: 'flex', gap: 20 }}>
               <a href="/about" style={{ color: 'inherit', textDecoration: 'none' }}>About</a>
-              <button onClick={() => setLegalDoc('privacy')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12.5, padding: 0, fontFamily: 'inherit' }}>Privacy Policy</button>
-              <button onClick={() => setLegalDoc('tnc')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', fontSize: 12.5, padding: 0, fontFamily: 'inherit' }}>Terms & Conditions</button>
+              <a href="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy Policy</a>
+              <a href="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms & Conditions</a>
             </div>
           </div>
         </div>
       </footer>
-
-      {/* ── LEGAL MODALS ── */}
-      <AnimatePresence>
-        {legalDoc && (
-          <LegalModal doc={legalDoc} onClose={() => setLegalDoc(null)} />
-        )}
-      </AnimatePresence>
 
       {/* ── WAITLIST MODAL ── */}
       <AnimatePresence>
